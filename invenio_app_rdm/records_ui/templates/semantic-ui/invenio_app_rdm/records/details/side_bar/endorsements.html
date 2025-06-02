@@ -1,0 +1,66 @@
+{% if record.endorsements | selectattr('endorsement_list') | list %}
+<div class="sidebar-container">
+  <h2 class="ui medium top attached header mt-0">
+    <i class="icon comment alternate outline"></i>
+    {{ _('Endorsements')}}
+    </h2>
+  <div class="ui segment bottom attached rdm-sidebar">
+      {% for endorsement in record.endorsements %}
+        <div class="ui items">
+          <div class="item" style="justify-content: center; display: flex;">
+            <div class="ui center aligned basic segment">
+              <div class="ui center aligned header large mb-0"> {{ endorsement.endorsement_count }} </div>
+              <div class="ui center aligned header medium mt-0">{{ endorsement.reviewer_name }}</div>
+              {% if endorsement.endorsement_list and endorsement.endorsement_list|length > 0 %}
+                {% set most_recent = endorsement.endorsement_list|sort(attribute='created')|last %}
+                <div class="ui center aligned content">
+                  Most recent review:
+                  <a href="{{ most_recent.url }}" target="_blank" >
+                    {{ most_recent.created[:10] }}
+                    </a>
+                </div>
+
+                <div class="ui center aligned content mt-10">
+                  <div class="ui accordion">
+                    <div class="title">
+                      <i class="caret right icon" aria-hidden="true"></i>
+                      <span
+                        tabindex="0"
+                        class="trigger"
+                        data-open-text="{{ _('Show more endorsements') }}"
+                        data-close-text="{{ _('Show less endorsements') }}"
+                      >
+                        {{ _('Show more endorsements') }}
+                      </span>
+                    </div>
+                    <div class="content">
+                      <div class="ui relaxed divided list">
+                        {% for item in endorsement.endorsement_list|sort(attribute='created', reverse=True) %}
+                          <div class="item">
+                            <div class="content">
+                              <a href="{{ item.url }}" target="_blank" class="header">
+                                {{ item.created[:10] }}
+                              </a>
+                              {% if item.comment %}
+                                <div class="description">{{ item.comment }}</div>
+                              {% endif %}
+                            </div>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% if not loop.last %}<div class="ui divider"></div>{% endif %}
+      {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+
+
