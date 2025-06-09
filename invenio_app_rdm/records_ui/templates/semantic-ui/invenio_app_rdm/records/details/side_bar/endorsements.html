@@ -9,12 +9,12 @@
         <div class="ui items">
           <div class="item" style="justify-content: center; display: flex;">
             <div class="ui center aligned basic segment">
-              <div class="ui center aligned header large mb-0"> {{ endorsement.endorsement_count }} </div>
+              <div class="ui center aligned header large mb-0"> {{ endorsement.review_count }} </div>
               <div class="ui center aligned header medium mt-0">{{ endorsement.reviewer_name }}</div>
               {% if endorsement.endorsement_list and endorsement.endorsement_list|length > 0 %}
                 {% set most_recent = endorsement.endorsement_list|sort(attribute='created')|last %}
                 <div class="ui center aligned content">
-                  Most recent review:
+                  Most recent endorsement:
                   <a href="{{ most_recent.url }}" target="_blank" >
                     {{ most_recent.created[:10] }}
                     </a>
@@ -27,15 +27,15 @@
                       <span
                         tabindex="0"
                         class="trigger"
-                        data-open-text="{{ _('Show more endorsements') }}"
-                        data-close-text="{{ _('Show less endorsements') }}"
+                        data-open-text="{{ _('Show reviews') }}"
+                        data-close-text="{{ _('Hide reviews') }}"
                       >
-                        {{ _('Show more endorsements') }}
+                        {{ _('Show reviews') }}
                       </span>
                     </div>
                     <div class="content">
                       <div class="ui relaxed divided list">
-                        {% for item in endorsement.endorsement_list|sort(attribute='created', reverse=True) %}
+                        {% for item in endorsement.review_list|sort(attribute='created', reverse=True) %}
                           <div class="item">
                             <div class="content">
                               <a href="{{ item.url }}" target="_blank" class="header">
