@@ -1,0 +1,15 @@
+<div class="sidebar-container">
+  <h2 class="ui medium top attached header mt-0">
+    <i class="icon paper plane outline"></i>
+    {{ _('Endorsement Request') }}
+    </h2>
+  <div id="endorsement-request-record" class="ui segment bottom attached exports rdm-sidebar">
+
+    {% set formats = [
+    { 'name': 'PCI Evolutionary Biology', 'reviewer_id': 1 },
+    { 'name': 'Reviewer 2', 'reviewer_id': 2 },
+    ] %}
+
+    <div id="recordEndorsementRequest" data-formats='{{ formats | tojson }}'></div>
+  </div>
+</div>
