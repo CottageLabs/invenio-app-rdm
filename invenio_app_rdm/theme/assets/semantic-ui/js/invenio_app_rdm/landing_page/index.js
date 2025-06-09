@@ -13,6 +13,7 @@ import { RecordManagement } from "./RecordManagement";
 import { RecordVersionsList } from "./RecordVersionsList";
 import { RecordCitationField } from "./RecordCitationField";
 import { ExportDropdown } from "./ExportDropdown";
+import { EndorsementRequestDropdown } from "./EndorsementRequestDropdown";
 import { CommunitiesManagement } from "./CommunitiesManagement";
 import Overridable, { OverridableContext, overrideStore } from "react-overridable";
 
@@ -22,6 +23,7 @@ const recordManagementMobile = document.getElementById("recordManagementMobile")
 const recordVersionsAppDiv = document.getElementById("recordVersions");
 const recordCitationAppDiv = document.getElementById("recordCitation");
 const recordExportDownloadDiv = document.getElementById("recordExportDownload");
+const recordEndorsementRequestDiv = document.getElementById("recordEndorsementRequest");
 const sidebarCommunitiesManageDiv = document.getElementById(
   "sidebar-communities-manage"
 );
@@ -78,6 +80,13 @@ if (recordExportDownloadDiv) {
   ReactDOM.render(
     <ExportDropdown formats={JSON.parse(recordExportDownloadDiv.dataset.formats)} />,
     recordExportDownloadDiv
+  );
+}
+
+if (recordEndorsementRequestDiv) {
+  ReactDOM.render(
+    <EndorsementRequestDropdown formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)} />,
+    recordEndorsementRequestDiv
   );
 }
 
