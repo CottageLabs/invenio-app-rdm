@@ -10,6 +10,10 @@
     { 'name': 'Reviewer 2', 'reviewer_id': 2 },
     ] %}
 
-    <div id="recordEndorsementRequest" data-formats='{{ formats | tojson }}'></div>
+    <div
+      id="recordEndorsementRequest"
+      data-formats='{{ formats | tojson }}'
+      data-endorsement-request-endpoint="{{ record.links.endorsement_request }}"
+    ></div>
   </div>
 </div>

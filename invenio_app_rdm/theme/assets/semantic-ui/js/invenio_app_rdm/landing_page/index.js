@@ -85,7 +85,10 @@ if (recordExportDownloadDiv) {
 
 if (recordEndorsementRequestDiv) {
   ReactDOM.render(
-    <EndorsementRequestDropdown formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)} />,
+    <EndorsementRequestDropdown
+        formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
+        endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
+    />,
     recordEndorsementRequestDiv
   );
 }
