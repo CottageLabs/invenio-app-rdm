@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Grid, Dropdown, Button } from "semantic-ui-react";
 import { i18next } from "@translations/invenio_app_rdm/i18next";
-import { http, withCancel } from "react-invenio-forms";
+import { http, withCancel, ErrorMessage } from "react-invenio-forms";
 
 export class EndorsementRequestDropdown extends Component {
   constructor(props) {
@@ -41,7 +41,7 @@ export class EndorsementRequestDropdown extends Component {
     });
   };
 
-  handleAsyncFetch = async (fetchFunction, stateKey, errorMessage) => {
+  handleAsyncFetch = async (fetchFunction, stateKey, errorMessage, onError) => {
     const cancellablePromise = withCancel(fetchFunction());
     this.setState({
       loading: true,
@@ -55,10 +55,16 @@ export class EndorsementRequestDropdown extends Component {
       });
     } catch (error) {
       if (error !== "UNMOUNTED") {
-        this.setState({
-          loading: false,
-          error: i18next.t(errorMessage),
-        });
+        const errorText = error?.response?.data?.message || error?.message || i18next.t(errorMessage);
+        
+        if (onError) {
+          onError(error, errorText);
+        } else {
+          this.setState({
+            loading: false,
+            error: errorText,
+          });
+        }
       }
     }
   };
@@ -81,7 +87,7 @@ export class EndorsementRequestDropdown extends Component {
 
 
   render() {
-    const { selectedReviewerId, reviewerOptions } = this.state;
+    const { selectedReviewerId, reviewerOptions, error } = this.state;
     const endorsementRequestOptions = reviewerOptions.map((option, index) => {
       return {
         key: `option-${index}`,
@@ -90,10 +96,18 @@ export class EndorsementRequestDropdown extends Component {
       };
     });
 
-
-
     return (
-      <Grid>
+      <>
+        {error && (
+          <ErrorMessage
+            header={i18next.t("Unable to process endorsement request")}
+            content={error}
+            icon="exclamation"
+            negative
+            size="mini"
+          />
+        )}
+        <Grid>
         <Grid.Column width={11}>
           <Dropdown
             aria-label={i18next.t("Reviewer selection")}
@@ -117,6 +131,7 @@ export class EndorsementRequestDropdown extends Component {
           </Button>
         </Grid.Column>
       </Grid>
+      </>
     );
   }
 }
