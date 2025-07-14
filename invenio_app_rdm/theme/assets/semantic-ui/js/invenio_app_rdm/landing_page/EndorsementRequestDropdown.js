@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Grid, Dropdown, Button } from "semantic-ui-react";
+import { Grid, Dropdown, Button, Table } from "semantic-ui-react";
 import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { http, withCancel, ErrorMessage } from "react-invenio-forms";
 import { SuccessIcon } from "@js/invenio_communities/members";
@@ -156,6 +156,40 @@ export class EndorsementRequestDropdown extends Component {
           </Button>
         </Grid.Column>
       </Grid>
+      {reviewerOptions.length > 0 && (
+        <Table
+          celled
+          compact
+          size="small"
+          unstackable
+          style={{
+            marginTop: '1rem',
+            width: '100%',
+            tableLayout: 'fixed'
+          }}
+        >
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell style={{ width: '70%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
+              <Table.HeaderCell style={{ width: '30%' }}>{i18next.t("Status")}</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {reviewerOptions.map((reviewer, index) => (
+              <Table.Row key={`reviewer-${index}`}>
+                <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reviewer.reviewer_name}</Table.Cell>
+                <Table.Cell style={{ width: '30%' }}>
+                  {reviewer.available ? (
+                    <span className="ui green label">{i18next.t("Available")}</span>
+                  ) : (
+                    <span className="ui red label">{i18next.t("Unavailable")}</span>
+                  )}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      )}
       </>
     );
   }
