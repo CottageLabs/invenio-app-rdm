@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Grid, Dropdown, Button } from "semantic-ui-react";
 import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { http, withCancel, ErrorMessage } from "react-invenio-forms";
+import { SuccessIcon } from "@js/invenio_communities/members";
 
 export class EndorsementRequestDropdown extends Component {
   constructor(props) {
@@ -12,6 +13,7 @@ export class EndorsementRequestDropdown extends Component {
       selectedReviewerId: formats[0]?.reviewer_id,
       loading: false,
       error: null,
+      success: false,
       endorsementRequests: [],
       reviewerOptions: formats || []
     };
@@ -41,11 +43,12 @@ export class EndorsementRequestDropdown extends Component {
     });
   };
 
-  handleAsyncFetch = async (fetchFunction, stateKey, errorMessage, onError) => {
+  handleAsyncFetch = async (fetchFunction, stateKey, errorMessage, onError, onSuccess) => {
     const cancellablePromise = withCancel(fetchFunction());
     this.setState({
       loading: true,
       error: null,
+      success: false,
     });
     try {
       const response = await cancellablePromise.promise;
@@ -53,10 +56,14 @@ export class EndorsementRequestDropdown extends Component {
         [stateKey]: response.data,
         loading: false,
       });
+
+      if (onSuccess) {
+        onSuccess(response);
+      }
     } catch (error) {
       if (error !== "UNMOUNTED") {
         const errorText = error?.response?.data?.message || error?.message || i18next.t(errorMessage);
-        
+
         if (onError) {
           onError(error, errorText);
         } else {
@@ -81,13 +88,17 @@ export class EndorsementRequestDropdown extends Component {
     await this.handleAsyncFetch(
       this.fetchRecordEndorsementRequests,
       'endorsementRequests',
-      'An error occurred while fetching endorsement requests.'
+      'An error occurred while sending endorsement request.',
+      null,
+      () => {
+        this.setState({ success: true });
+      }
     );
   };
 
 
   render() {
-    const { selectedReviewerId, reviewerOptions, error } = this.state;
+    const { selectedReviewerId, reviewerOptions, error, success } = this.state;
     const endorsementRequestOptions = reviewerOptions.map((option, index) => {
       return {
         key: `option-${index}`,
@@ -105,6 +116,20 @@ export class EndorsementRequestDropdown extends Component {
             icon="exclamation"
             negative
             size="mini"
+          />
+        )}
+        {success && (
+          <SuccessIcon
+            timeOutDelay={10000}
+            show={success}
+            content={
+              <div role="alert" className="ui positive message">
+                <div className="header">
+                  {i18next.t("Endorsement request sent successfully")}
+                </div>
+                <p>{i18next.t("Your endorsement request has been sent to the reviewer.")}</p>
+              </div>
+            }
           />
         )}
         <Grid>
