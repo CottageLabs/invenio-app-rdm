@@ -88,6 +88,7 @@ if (recordEndorsementRequestDiv) {
     <EndorsementRequestDropdown
         formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
         endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
+        reviewerOptionEndpoint={recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint}
     />,
     recordEndorsementRequestDiv
   );
