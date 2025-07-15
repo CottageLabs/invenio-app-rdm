@@ -5,17 +5,21 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { http, withCancel, ErrorMessage } from "react-invenio-forms";
 import { SuccessIcon } from "@js/invenio_communities/members";
 
+
+// KTODO hide reviewer options if reviewer is not available
+// KTODO hide send request section if no reviewers are available
+// KTODO refresh reviewer options after sending request successfully
+
 export class EndorsementRequestDropdown extends Component {
   constructor(props) {
     super(props);
-    const { formats } = this.props;
     this.state = {
-      selectedReviewerId: formats[0]?.reviewer_id,
+      selectedReviewerId: null,
       loading: false,
       error: null,
       success: false,
       endorsementRequests: [],
-      reviewerOptions: formats || []
+      reviewerOptions: []
     };
   }
 
@@ -52,10 +56,11 @@ export class EndorsementRequestDropdown extends Component {
     });
     try {
       const response = await cancellablePromise.promise;
-      this.setState({
-        [stateKey]: response.data,
-        loading: false,
-      });
+      const newState = { loading: false };
+      if (stateKey) {
+        newState[stateKey] = response.data;
+      }
+      this.setState(newState);
 
       if (onSuccess) {
         onSuccess(response);
@@ -79,8 +84,20 @@ export class EndorsementRequestDropdown extends Component {
   getReviewerOptions = async () => {
     await this.handleAsyncFetch(
       this.fetchReviewerOption,
-      'reviewerOptions',
-      'An error occurred while fetching reviewer options.'
+      null,
+      'An error occurred while fetching reviewer options.',
+      null,
+      (response) => {
+        const reviewerOptions = [...response.data].sort(
+          (a, b) => a.reviewer_name.localeCompare(b.reviewer_name)
+        );
+        const availableReviewers = reviewerOptions.filter(option => option.available);
+        this.setState({
+          reviewerOptions: reviewerOptions,
+          selectedReviewerId: availableReviewers.length > 0 ? availableReviewers[0].reviewer_id : null
+        });
+      }
+
     );
   };
 
@@ -92,14 +109,16 @@ export class EndorsementRequestDropdown extends Component {
       null,
       () => {
         this.setState({ success: true });
+        this.getReviewerOptions();
       }
     );
   };
 
 
   render() {
-    const { selectedReviewerId, reviewerOptions, error, success } = this.state;
-    const endorsementRequestOptions = reviewerOptions.map((option, index) => {
+    const { reviewerOptions, selectedReviewerId, error, success } = this.state;
+    const availableReviewers = reviewerOptions.filter(option => option.available);
+    const endorsementRequestOptions = availableReviewers.map((option, index) => {
       return {
         key: `option-${index}`,
         text: option.reviewer_name,
@@ -132,30 +151,32 @@ export class EndorsementRequestDropdown extends Component {
             }
           />
         )}
-        <Grid>
-        <Grid.Column width={11}>
-          <Dropdown
-            aria-label={i18next.t("Reviewer selection")}
-            selection
-            fluid
-            selectOnNavigation={false}
-            options={endorsementRequestOptions}
-            onChange={(event, data) => this.setState({ selectedReviewerId: data.value })}
-            defaultValue={selectedReviewerId}
-          />
-        </Grid.Column>
-        <Grid.Column width={5} className="pl-0">
-          <Button
-            role="button"
-            fluid
-            onClick={this.getEndorsementRequests}
-            loading={this.state.loading}
-            title={i18next.t("Request reviewer for endorsement")}
-          >
-            {i18next.t("Request")}
-          </Button>
-        </Grid.Column>
-      </Grid>
+        {endorsementRequestOptions.length > 0 && (
+          <Grid>
+            <Grid.Column width={11}>
+              <Dropdown
+                aria-label={i18next.t("Reviewer selection")}
+                selection
+                fluid
+                selectOnNavigation={false}
+                options={endorsementRequestOptions}
+                onChange={(event, data) => this.setState({ selectedReviewerId: data.value })}
+                defaultValue={selectedReviewerId}
+              />
+            </Grid.Column>
+            <Grid.Column width={5} className="pl-0">
+              <Button
+                role="button"
+                fluid
+                onClick={this.getEndorsementRequests}
+                loading={this.state.loading}
+                title={i18next.t("Request reviewer for endorsement")}
+              >
+                {i18next.t("Request")}
+              </Button>
+            </Grid.Column>
+          </Grid>
+        )}
       {reviewerOptions.length > 0 && (
         <Table
           celled
@@ -170,8 +191,8 @@ export class EndorsementRequestDropdown extends Component {
         >
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell style={{ width: '70%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
-              <Table.HeaderCell style={{ width: '30%' }}>{i18next.t("Status")}</Table.HeaderCell>
+              <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
+              <Table.HeaderCell style={{ width: '35%' }}>{i18next.t("Status")}</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -182,7 +203,7 @@ export class EndorsementRequestDropdown extends Component {
                   {reviewer.available ? (
                     <span className="ui green label">{i18next.t("Available")}</span>
                   ) : (
-                    <span className="ui red label">{i18next.t("Unavailable")}</span>
+                    <span className="ui label">{i18next.t(reviewer.status)}</span>
                   )}
                 </Table.Cell>
               </Table.Row>
