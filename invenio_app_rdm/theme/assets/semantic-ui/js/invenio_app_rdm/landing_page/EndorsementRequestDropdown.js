@@ -5,10 +5,7 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { http, withCancel, ErrorMessage } from "react-invenio-forms";
 import { SuccessIcon } from "@js/invenio_communities/members";
 
-
-// KTODO hide reviewer options if reviewer is not available
-// KTODO hide send request section if no reviewers are available
-// KTODO refresh reviewer options after sending request successfully
+// KTODO convert status type value to readable text
 
 export class EndorsementRequestDropdown extends Component {
   constructor(props) {
