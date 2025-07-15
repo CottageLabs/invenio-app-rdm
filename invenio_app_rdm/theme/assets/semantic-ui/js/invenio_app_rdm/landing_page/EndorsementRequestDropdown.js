@@ -24,7 +24,7 @@ export class EndorsementRequestDropdown extends Component {
   }
 
   componentDidMount() {
-    this.getReviewerOptions();
+    this.loadReviewerOptions();
   }
 
   fetchRecordEndorsementRequests = async () => {
@@ -81,7 +81,7 @@ export class EndorsementRequestDropdown extends Component {
     }
   };
 
-  getReviewerOptions = async () => {
+  loadReviewerOptions = async () => {
     await this.handleAsyncFetch(
       this.fetchReviewerOption,
       null,
@@ -109,7 +109,7 @@ export class EndorsementRequestDropdown extends Component {
       null,
       () => {
         this.setState({ success: true });
-        this.getReviewerOptions();
+        this.loadReviewerOptions();
       }
     );
   };
