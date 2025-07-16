@@ -10,7 +10,7 @@ import { SuccessIcon } from "@js/invenio_communities/members";
 class ReviewerListTable extends Component {
   render() {
     const { reviewerOptions } = this.props;
-    
+
     return (
       <Table
         celled
@@ -55,7 +55,7 @@ ReviewerListTable.propTypes = {
 class EndorsementRequestForm extends Component {
   render() {
     const { endorsementRequestOptions, selectedReviewerId, loading, onReviewerChange, onSubmit } = this.props;
-    
+
     return (
       <Grid>
         <Grid.Column width={11}>
@@ -63,7 +63,7 @@ class EndorsementRequestForm extends Component {
             aria-label={i18next.t("Reviewer selection")}
             selection
             fluid
-            selectOnNavigation={false}
+            selectOnNavigation={true}
             options={endorsementRequestOptions}
             onChange={onReviewerChange}
             defaultValue={selectedReviewerId}
@@ -100,8 +100,7 @@ export class EndorsementRequestDropdown extends Component {
       selectedReviewerId: null,
       loading: false,
       error: null,
-      success: false,
-      endorsementRequests: [],
+      endoReqSuccess: false,
       reviewerOptions: []
     };
   }
@@ -116,7 +115,6 @@ export class EndorsementRequestDropdown extends Component {
     this.setState({
       loading: true,
       error: null,
-      success: false,
     });
     try {
       const response = await cancellablePromise.promise;
@@ -175,6 +173,7 @@ export class EndorsementRequestDropdown extends Component {
   };
 
   sendEndorsementRequest = async () => {
+  this.setState({endoReqSuccess: false});
     const fetchRecordEndorsementRequests = async () => {
       const { endorsementRequestEndpoint } = this.props;
       return await http.post(endorsementRequestEndpoint,
@@ -192,7 +191,7 @@ export class EndorsementRequestDropdown extends Component {
       'An error occurred while sending endorsement request.',
       null,
       () => {
-        this.setState({ success: true });
+        this.setState({ endoReqSuccess: true });
         this.loadReviewerOptions();
       }
     );
@@ -208,7 +207,7 @@ export class EndorsementRequestDropdown extends Component {
 
 
   render() {
-    const { reviewerOptions, selectedReviewerId, error, success } = this.state;
+    const { reviewerOptions, selectedReviewerId, error, endoReqSuccess } = this.state;
     const availableReviewers = reviewerOptions.filter(option => option.available);
     const endorsementRequestOptions = availableReviewers.map((option, index) => {
       return {
@@ -229,10 +228,10 @@ export class EndorsementRequestDropdown extends Component {
             size="mini"
           />
         )}
-        {success && (
+        {endoReqSuccess && (
           <SuccessIcon
             timeOutDelay={10000}
-            show={success}
+            show={endoReqSuccess}
             content={
               <div role="alert" className="ui positive message">
                 <div className="header">
