@@ -54,7 +54,7 @@ ReviewerListTable.propTypes = {
 
 class EndorsementRequestForm extends Component {
   render() {
-    const { endorsementRequestOptions, selectedReviewerId, loading, onReviewerChange, onSubmit } = this.props;
+    const { options, selectedId, loading, onChange, onSubmit } = this.props;
 
     return (
       <Grid>
@@ -64,9 +64,9 @@ class EndorsementRequestForm extends Component {
             selection
             fluid
             selectOnNavigation={true}
-            options={endorsementRequestOptions}
-            onChange={onReviewerChange}
-            defaultValue={selectedReviewerId}
+            options={options}
+            onChange={onChange}
+            defaultValue={selectedId}
           />
         </Grid.Column>
         <Grid.Column width={5} className="pl-0">
@@ -86,10 +86,10 @@ class EndorsementRequestForm extends Component {
 }
 
 EndorsementRequestForm.propTypes = {
-  endorsementRequestOptions: PropTypes.array.isRequired,
-  selectedReviewerId: PropTypes.string,
+  options: PropTypes.array.isRequired,
+  selectedId: PropTypes.string,
   loading: PropTypes.bool.isRequired,
-  onReviewerChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
 };
 
@@ -244,10 +244,10 @@ export class EndorsementRequestDropdown extends Component {
         )}
         {endorsementRequestOptions.length > 0 && (
           <EndorsementRequestForm
-            endorsementRequestOptions={endorsementRequestOptions}
-            selectedReviewerId={selectedReviewerId}
+            options={endorsementRequestOptions}
+            selectedId={selectedReviewerId}
             loading={this.state.loading}
-            onReviewerChange={this.handleReviewerChange}
+            onChange={this.handleReviewerChange}
             onSubmit={this.handleSubmit}
           />
         )}
