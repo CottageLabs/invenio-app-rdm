@@ -7,6 +7,92 @@ import { SuccessIcon } from "@js/invenio_communities/members";
 
 // KTODO convert status type value to readable text
 
+class ReviewerListTable extends Component {
+  render() {
+    const { reviewerOptions } = this.props;
+    
+    return (
+      <Table
+        celled
+        compact
+        size="small"
+        unstackable
+        style={{
+          marginTop: '1rem',
+          width: '100%',
+          tableLayout: 'fixed'
+        }}
+      >
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
+            <Table.HeaderCell style={{ width: '35%' }}>{i18next.t("Status")}</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {reviewerOptions.map((reviewer, index) => (
+            <Table.Row key={`reviewer-${index}`}>
+              <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reviewer.reviewer_name}</Table.Cell>
+              <Table.Cell style={{ width: '30%' }}>
+                {reviewer.available ? (
+                  <span className="ui green label">{i18next.t("Available")}</span>
+                ) : (
+                  <span className="ui label">{i18next.t(reviewer.status)}</span>
+                )}
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+    );
+  }
+}
+
+ReviewerListTable.propTypes = {
+  reviewerOptions: PropTypes.array.isRequired,
+};
+
+class EndorsementRequestForm extends Component {
+  render() {
+    const { endorsementRequestOptions, selectedReviewerId, loading, onReviewerChange, onSubmit } = this.props;
+    
+    return (
+      <Grid>
+        <Grid.Column width={11}>
+          <Dropdown
+            aria-label={i18next.t("Reviewer selection")}
+            selection
+            fluid
+            selectOnNavigation={false}
+            options={endorsementRequestOptions}
+            onChange={onReviewerChange}
+            defaultValue={selectedReviewerId}
+          />
+        </Grid.Column>
+        <Grid.Column width={5} className="pl-0">
+          <Button
+            role="button"
+            fluid
+            onClick={onSubmit}
+            loading={loading}
+            title={i18next.t("Request reviewer for endorsement")}
+          >
+            {i18next.t("Request")}
+          </Button>
+        </Grid.Column>
+      </Grid>
+    );
+  }
+}
+
+EndorsementRequestForm.propTypes = {
+  endorsementRequestOptions: PropTypes.array.isRequired,
+  selectedReviewerId: PropTypes.string,
+  loading: PropTypes.bool.isRequired,
+  onReviewerChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};
+
 export class EndorsementRequestDropdown extends Component {
   constructor(props) {
     super(props);
@@ -24,25 +110,6 @@ export class EndorsementRequestDropdown extends Component {
     this.loadReviewerOptions();
   }
 
-  fetchRecordEndorsementRequests = async () => {
-    const { endorsementRequestEndpoint } = this.props;
-    return await http.post(endorsementRequestEndpoint,
-      {'reviewer_id': this.state.selectedReviewerId},
-      {
-        headers: {
-          Accept: "application/json",
-        },
-    });
-  };
-
-  fetchReviewerOption = async () => {
-    const { reviewerOptionEndpoint } = this.props;
-    return await http.get(reviewerOptionEndpoint, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
-  };
 
   handleAsyncFetch = async (fetchFunction, stateKey, errorMessage, onError, onSuccess) => {
     const cancellablePromise = withCancel(fetchFunction());
@@ -79,8 +146,17 @@ export class EndorsementRequestDropdown extends Component {
   };
 
   loadReviewerOptions = async () => {
+    const fetchReviewerOption = async () => {
+      const { reviewerOptionEndpoint } = this.props;
+      return await http.get(reviewerOptionEndpoint, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+    };
+
     await this.handleAsyncFetch(
-      this.fetchReviewerOption,
+      fetchReviewerOption,
       null,
       'An error occurred while fetching reviewer options.',
       null,
@@ -98,9 +174,20 @@ export class EndorsementRequestDropdown extends Component {
     );
   };
 
-  getEndorsementRequests = async () => {
+  sendEndorsementRequest = async () => {
+    const fetchRecordEndorsementRequests = async () => {
+      const { endorsementRequestEndpoint } = this.props;
+      return await http.post(endorsementRequestEndpoint,
+        {'reviewer_id': this.state.selectedReviewerId},
+        {
+          headers: {
+            Accept: "application/json",
+          },
+      });
+    };
+
     await this.handleAsyncFetch(
-      this.fetchRecordEndorsementRequests,
+      fetchRecordEndorsementRequests,
       'endorsementRequests',
       'An error occurred while sending endorsement request.',
       null,
@@ -109,6 +196,14 @@ export class EndorsementRequestDropdown extends Component {
         this.loadReviewerOptions();
       }
     );
+  };
+
+  handleReviewerChange = (event, data) => {
+    this.setState({ selectedReviewerId: data.value });
+  };
+
+  handleSubmit = () => {
+    this.sendEndorsementRequest();
   };
 
 
@@ -149,64 +244,16 @@ export class EndorsementRequestDropdown extends Component {
           />
         )}
         {endorsementRequestOptions.length > 0 && (
-          <Grid>
-            <Grid.Column width={11}>
-              <Dropdown
-                aria-label={i18next.t("Reviewer selection")}
-                selection
-                fluid
-                selectOnNavigation={false}
-                options={endorsementRequestOptions}
-                onChange={(event, data) => this.setState({ selectedReviewerId: data.value })}
-                defaultValue={selectedReviewerId}
-              />
-            </Grid.Column>
-            <Grid.Column width={5} className="pl-0">
-              <Button
-                role="button"
-                fluid
-                onClick={this.getEndorsementRequests}
-                loading={this.state.loading}
-                title={i18next.t("Request reviewer for endorsement")}
-              >
-                {i18next.t("Request")}
-              </Button>
-            </Grid.Column>
-          </Grid>
+          <EndorsementRequestForm
+            endorsementRequestOptions={endorsementRequestOptions}
+            selectedReviewerId={selectedReviewerId}
+            loading={this.state.loading}
+            onReviewerChange={this.handleReviewerChange}
+            onSubmit={this.handleSubmit}
+          />
         )}
       {reviewerOptions.length > 0 && (
-        <Table
-          celled
-          compact
-          size="small"
-          unstackable
-          style={{
-            marginTop: '1rem',
-            width: '100%',
-            tableLayout: 'fixed'
-          }}
-        >
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
-              <Table.HeaderCell style={{ width: '35%' }}>{i18next.t("Status")}</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {reviewerOptions.map((reviewer, index) => (
-              <Table.Row key={`reviewer-${index}`}>
-                <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reviewer.reviewer_name}</Table.Cell>
-                <Table.Cell style={{ width: '30%' }}>
-                  {reviewer.available ? (
-                    <span className="ui green label">{i18next.t("Available")}</span>
-                  ) : (
-                    <span className="ui label">{i18next.t(reviewer.status)}</span>
-                  )}
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
+        <ReviewerListTable reviewerOptions={reviewerOptions} />
       )}
       </>
     );
