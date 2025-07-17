@@ -11,13 +11,19 @@ const getStatusDisplayName = (status) => {
     'coar-notify:EndorsementAction': 'Endorsement',
     'TentativeAccept': 'Tentative Accept',
     'Reject': 'Reject',
-    'TentativeReject': 'Tentative Reject'
+    'TentativeReject': 'Tentative Reject',
+    'available': 'Available',
   };
-  
+
   return statusMap[status] || status;
 };
 
 class ReviewerListTable extends Component {
+  getStatusLabel = (reviewer) => {
+    const labelClass = reviewer.status === 'available' ? 'green' : '';
+    return <span className={`ui ${labelClass} label`}>{i18next.t(getStatusDisplayName(reviewer.status))}</span>;
+  };
+
   render() {
     const { reviewerOptions } = this.props;
 
@@ -44,11 +50,7 @@ class ReviewerListTable extends Component {
             <Table.Row key={`reviewer-${index}`}>
               <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reviewer.reviewer_name}</Table.Cell>
               <Table.Cell style={{ width: '30%' }}>
-                {reviewer.available ? (
-                  <span className="ui green label">{i18next.t("Available")}</span>
-                ) : (
-                  <span className="ui label">{i18next.t(getStatusDisplayName(reviewer.status))}</span>
-                )}
+                {this.getStatusLabel(reviewer)}
               </Table.Cell>
             </Table.Row>
           ))}
