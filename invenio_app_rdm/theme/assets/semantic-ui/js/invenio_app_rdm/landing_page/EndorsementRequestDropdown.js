@@ -5,7 +5,17 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { http, withCancel, ErrorMessage } from "react-invenio-forms";
 import { SuccessIcon } from "@js/invenio_communities/members";
 
-// KTODO convert status type value to readable text
+const getStatusDisplayName = (status) => {
+  const statusMap = {
+    'coar-notify:ReviewAction': 'Review',
+    'coar-notify:EndorsementAction': 'Endorsement',
+    'TentativeAccept': 'Tentative Accept',
+    'Reject': 'Reject',
+    'TentativeReject': 'Tentative Reject'
+  };
+  
+  return statusMap[status] || status;
+};
 
 class ReviewerListTable extends Component {
   render() {
@@ -37,7 +47,7 @@ class ReviewerListTable extends Component {
                 {reviewer.available ? (
                   <span className="ui green label">{i18next.t("Available")}</span>
                 ) : (
-                  <span className="ui label">{i18next.t(reviewer.status)}</span>
+                  <span className="ui label">{i18next.t(getStatusDisplayName(reviewer.status))}</span>
                 )}
               </Table.Cell>
             </Table.Row>
