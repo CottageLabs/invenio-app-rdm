@@ -1,5 +1,8 @@
-{% if record.endorsements  %}
-
+{%
+  if record.endorsements | selectattr('endorsement_list') | list
+      and config.NOTIFY_PHASE_1_ENABLED
+      and config.NOTIFY_PHASE_2_ENABLED
+%}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">
     <i class="icon comment alternate outline"></i>
