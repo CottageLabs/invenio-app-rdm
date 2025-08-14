@@ -14,6 +14,7 @@ import { RecordVersionsList } from "./RecordVersionsList";
 import { RecordCitationField } from "./RecordCitationField";
 import { ExportDropdown } from "./ExportDropdown";
 import { EndorsementRequestDropdown } from "./EndorsementRequestDropdown";
+import { EndorsementsDisplay } from "./EndorsementsDisplay";
 import { CommunitiesManagement } from "./CommunitiesManagement";
 import Overridable, { OverridableContext, overrideStore } from "react-overridable";
 
@@ -24,6 +25,7 @@ const recordVersionsAppDiv = document.getElementById("recordVersions");
 const recordCitationAppDiv = document.getElementById("recordCitation");
 const recordExportDownloadDiv = document.getElementById("recordExportDownload");
 const recordEndorsementRequestDiv = document.getElementById("recordEndorsementRequest");
+const recordEndorsementDisplayDiv = document.getElementById("recordEndorsementDisplay");
 const sidebarCommunitiesManageDiv = document.getElementById(
   "sidebar-communities-manage"
 );
@@ -93,6 +95,14 @@ if (recordEndorsementRequestDiv
         reviewerOptionEndpoint={recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint}
     />,
     recordEndorsementRequestDiv
+  );
+}
+
+if (recordEndorsementDisplayDiv) {
+  ReactDOM.render(
+    <EndorsementsDisplay
+      record={JSON.parse(recordEndorsementDisplayDiv.dataset.record)}/>,
+    recordEndorsementDisplayDiv
   );
 }
 
