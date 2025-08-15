@@ -16,6 +16,7 @@ import { ExportDropdown } from "./ExportDropdown";
 import { EndorsementRequestDropdown } from "./EndorsementRequestDropdown";
 import { EndorsementsDisplay } from "./EndorsementsDisplay";
 import { CommunitiesManagement } from "./CommunitiesManagement";
+import { VersionsProvider } from "./VersionsProvider";
 import Overridable, { OverridableContext, overrideStore } from "react-overridable";
 
 const recordManagementAppDiv = document.getElementById("recordManagement");
@@ -56,14 +57,28 @@ function renderRecordManagement(element) {
   );
 }
 
-if (recordVersionsAppDiv) {
-  ReactDOM.render(
-    <RecordVersionsList
-      record={JSON.parse(recordVersionsAppDiv.dataset.record)}
-      isPreview={JSON.parse(recordVersionsAppDiv.dataset.preview)}
-    />,
-    recordVersionsAppDiv
+if (recordVersionsAppDiv || recordEndorsementDisplayDiv) {
+  const record = recordVersionsAppDiv 
+    ? JSON.parse(recordVersionsAppDiv.dataset.record)
+    : JSON.parse(recordEndorsementDisplayDiv.dataset.record);
+
+  const VersionsWrapper = () => (
+    <VersionsProvider record={record}>
+      {recordVersionsAppDiv && (
+        <RecordVersionsList
+          record={record}
+          isPreview={JSON.parse(recordVersionsAppDiv.dataset.preview)}
+        />
+      )}
+      {recordEndorsementDisplayDiv && (
+        <EndorsementsDisplay record={record} />
+      )}
+    </VersionsProvider>
   );
+
+  if (recordVersionsAppDiv) {
+    ReactDOM.render(<VersionsWrapper />, recordVersionsAppDiv);
+  }
 }
 
 if (recordCitationAppDiv) {
@@ -92,10 +107,12 @@ if (recordEndorsementRequestDiv) {
   );
 }
 
-if (recordEndorsementDisplayDiv) {
+if (recordEndorsementDisplayDiv && !recordVersionsAppDiv) {
+  const record = JSON.parse(recordEndorsementDisplayDiv.dataset.record);
   ReactDOM.render(
-    <EndorsementsDisplay
-      record={JSON.parse(recordEndorsementDisplayDiv.dataset.record)}/>,
+    <VersionsProvider record={record}>
+      <EndorsementsDisplay record={record} />
+    </VersionsProvider>,
     recordEndorsementDisplayDiv
   );
 }
