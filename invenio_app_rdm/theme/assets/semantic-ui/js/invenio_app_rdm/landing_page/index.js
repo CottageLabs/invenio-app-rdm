@@ -83,9 +83,15 @@ if (recordExportDownloadDiv) {
   );
 }
 
-if (recordEndorsementRequestDiv) {
+if (recordEndorsementRequestDiv
+    && recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint
+    && recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint) {
   ReactDOM.render(
-    <EndorsementRequestDropdown formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)} />,
+    <EndorsementRequestDropdown
+        formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
+        endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
+        reviewerOptionEndpoint={recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint}
+    />,
     recordEndorsementRequestDiv
   );
 }

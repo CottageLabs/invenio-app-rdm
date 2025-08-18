@@ -1,3 +1,4 @@
+{% if record.links.endorsement_request and record.links.endorsement_request_reviewers %}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">
     <i class="icon paper plane outline"></i>
@@ -10,6 +11,12 @@
     { 'name': 'Reviewer 2', 'reviewer_id': 2 },
     ] %}
 
-    <div id="recordEndorsementRequest" data-formats='{{ formats | tojson }}'></div>
+    <div
+      id="recordEndorsementRequest"
+      data-formats='{{ formats | tojson }}'
+      data-endorsement-request-endpoint="{{ record.links.endorsement_request }}"
+      data-reviewer-option-endpoint="{{ record.links.endorsement_request_reviewers }}"
+    ></div>
   </div>
 </div>
+{% endif %}
