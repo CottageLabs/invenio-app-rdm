@@ -54,13 +54,7 @@ export class EndorsementsDisplay extends Component {
       let { hits, total } = result.data.hits;
       hits = hits.map(record => ({
         id: record.id,
-        //parent: record.parent,
-        //parent_id: record.parent.id,
-        //publication_date: record.ui.publication_date_l10n_medium,
         version: record.ui.version,
-        //links: record.links,
-        //pids: record.pids,
-        //new_draft_parent_doi: record.ui.new_draft_parent_doi,
         index: record.versions.index,
         is_latest: record.versions.is_latest,
       }));
@@ -129,8 +123,8 @@ export class EndorsementsDisplay extends Component {
     const isLatest = review.index === latestVersion.index;
 
     let icon_url = isLatest ? "notify-current.svg" : "notify-previous.svg";
-    let currentMessage = "Current version of the record";
-    let previousMessage = `Outdated version of the record. Current version: ${latestVersion.version}`;
+    let currentMessage = i18next.t("Current version of the record");
+    let previousMessage = i18next.t("Outdated version of the record. Current version: {{version}}", { version: latestVersion.version });
     let message = isLatest ? currentMessage : previousMessage;
 
     let icon = <img
@@ -192,7 +186,7 @@ export class EndorsementsDisplay extends Component {
 
               {mostRecentEndorsement && (
                 <div className="ui center aligned content mt-5">
-                  {i18next.t("Most recent endorsement: ")}
+                  {i18next.t("Most recent endorsement:")}&nbsp;
                   <a href={mostRecentEndorsement.url} target="_blank" rel="noopener noreferrer">
                     {this.formatDate(mostRecentEndorsement.created)}
                   </a>
@@ -201,10 +195,10 @@ export class EndorsementsDisplay extends Component {
 
               {mostRecentReview && (
                 <div className="ui center aligned content mt-5">
-                  {i18next.t("Most recent review: ")}
+                  {i18next.t("Most recent review:")}&nbsp;
                   <a href={mostRecentReview.url} target="_blank" rel="noopener noreferrer">
                     {this.formatDate(mostRecentReview.created)}
-                  </a> on {this.getVersionWithIcon(mostRecentReview, allVersions, latestVersion)}
+                  </a> {i18next.t("on")} {this.getVersionWithIcon(mostRecentReview, allVersions, latestVersion)}
                 </div>
               )}
 
@@ -213,8 +207,8 @@ export class EndorsementsDisplay extends Component {
               <Table striped>
                 <Table.Header>
                   <Table.Row>
-                    <Table.HeaderCell collapsing>Version</Table.HeaderCell>
-                    <Table.HeaderCell>Reviews</Table.HeaderCell>
+                    <Table.HeaderCell collapsing>{i18next.t("Version")}</Table.HeaderCell>
+                    <Table.HeaderCell>{i18next.t("Reviews")}</Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
