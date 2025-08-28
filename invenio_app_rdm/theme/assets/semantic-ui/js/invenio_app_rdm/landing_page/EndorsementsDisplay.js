@@ -206,17 +206,18 @@ export class EndorsementsDisplay extends Component {
           const mostRecentReview = this.getMostRecent(endorsement.review_list);
           const latestVersion = allVersions.hits.find(item => item.is_latest);
           const sortedReviews = this.getSortedReviews(endorsement.review_list);
+          const hasReviews = endorsement.review_list.length > 0;
 
           return (<Accordion key={`endorsement-${endorsement.reviewer_id}-${endorsementIndex}`} className="ui fluid accordion segment">
             <Accordion.Title
               active={activeIndices.includes(endorsementIndex)}
               index={endorsementIndex}
-              onClick={this.handleAccordionClick}
+              onClick={hasReviews ? this.handleAccordionClick : undefined}
               className="title"
             >
 
               <Header as="div" className="ui left aligned header small mb-0 trigger">
-                <Icon name={activeIndices.includes(endorsementIndex) ? "caret down" : "caret right"}/>
+                {hasReviews && <Icon name={activeIndices.includes(endorsementIndex) ? "caret down" : "caret right"}/>}
                 {endorsement.reviewer_name}{endorsement.review_count > 0 && ` (${endorsement.review_count})`}
               </Header>
 
