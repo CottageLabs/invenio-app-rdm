@@ -1,4 +1,8 @@
-{% if record.links.endorsement_request and record.links.endorsement_request_reviewers %}
+{% if record.links.endorsement_request
+      and record.links.endorsement_request_reviewers
+      and config.NOTIFY_PHASE_1_ENABLED
+      and config.NOTIFY_PHASE_2_ENABLED
+      %}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">
     <i class="icon paper plane outline"></i>
