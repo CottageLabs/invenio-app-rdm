@@ -8,7 +8,7 @@ export class EndorsementsDisplay extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeIndex: -1,
+      activeIndices: [],
       allVersions: {},
       versionsLoading: true,
       versionsError: null
@@ -75,9 +75,11 @@ export class EndorsementsDisplay extends Component {
 
   handleAccordionClick = (e, titleProps) => {
     const {index} = titleProps;
-    const {activeIndex} = this.state;
-    const newIndex = activeIndex === index ? -1 : index;
-    this.setState({activeIndex: newIndex});
+    const {activeIndices} = this.state;
+    const newIndices = activeIndices.includes(index)
+      ? activeIndices.filter(i => i !== index)
+      : [...activeIndices, index];
+    this.setState({activeIndices: newIndices});
   };
 
   formatDate = (dateString) => {
@@ -128,7 +130,7 @@ export class EndorsementsDisplay extends Component {
     let message = isLatest ? currentMessage : previousMessage;
 
     let icon = <img
-      className="inline-id-icon ml-5"
+      className="inline-id-icon"
       src={`/static/images/${icon_url}`}
       alt={message}
       title={message}
@@ -142,7 +144,7 @@ export class EndorsementsDisplay extends Component {
 
   render() {
     const {record} = this.props;
-    const {activeIndex, allVersions, versionsLoading, versionsError} = this.state;
+    const {activeIndices, allVersions, versionsLoading, versionsError} = this.state;
 
     // Filter reviewers that have endorsements
     const validEndorsements = record.endorsements.filter(
@@ -163,30 +165,65 @@ export class EndorsementsDisplay extends Component {
       return null;
     }
 
+    // Calculate total review count and find most recent review across all reviewers
+    let totalReviewCount = 0;
+    let mostRecentReview = null;
+
+    validEndorsements.forEach(endorsement => {
+      totalReviewCount += endorsement.review_list.length;
+      const recentReview = this.getMostRecent(endorsement.review_list);
+      if (recentReview && (!mostRecentReview || new Date(recentReview.created) > new Date(mostRecentReview.created))) {
+        mostRecentReview = recentReview;
+      }
+    });
+
+    const latestVersion = allVersions.hits.find(item => item.is_latest);
+
     return (
       <Segment className="ui segment bottom attached rdm-sidebar">
+
+        {validEndorsements.length > 1 && (
+          <Header as="h4" className="ui small header">
+            {totalReviewCount > 0 && (
+              <span className="ui small text"> {totalReviewCount} {i18next.t(totalReviewCount === 1 ? "review" : "reviews")}</span>
+            )}
+            {mostRecentReview && (
+              <div className="ui normal text mt-5">
+                {i18next.t("Most recent:")}&nbsp;
+                <a href={mostRecentReview.url} target="_blank" rel="noopener noreferrer">
+                  {this.formatDate(mostRecentReview.created)}
+                </a>
+                {latestVersion && (
+                  <span> {i18next.t("on")} {this.getVersionWithIcon(mostRecentReview, allVersions, latestVersion)}</span>
+                )}
+              </div>
+            )}
+          </Header>
+        )}
+
         {validEndorsements.map((endorsement, endorsementIndex) => {
           const mostRecentEndorsement = this.getMostRecent(endorsement.endorsement_list);
           const mostRecentReview = this.getMostRecent(endorsement.review_list);
           const latestVersion = allVersions.hits.find(item => item.is_latest);
           const sortedReviews = this.getSortedReviews(endorsement.review_list);
+          const hasReviews = endorsement.review_list.length > 0;
 
-          return (<Accordion key={`endorsement-${endorsement.reviewer_id}-${endorsementIndex}`}>
+          return (<Accordion key={`endorsement-${endorsement.reviewer_id}-${endorsementIndex}`} className="ui fluid accordion segment">
             <Accordion.Title
-              active={activeIndex === endorsementIndex}
+              active={activeIndices.includes(endorsementIndex)}
               index={endorsementIndex}
-              onClick={this.handleAccordionClick}
+              onClick={hasReviews ? this.handleAccordionClick : undefined}
               className="title"
             >
 
               <Header as="div" className="ui left aligned header small mb-0 trigger">
-                <Icon name={activeIndex === endorsementIndex ? "caret down" : "caret right"}/>
-                {endorsement.review_count} {endorsement.reviewer_name}
+                {hasReviews && <Icon name={activeIndices.includes(endorsementIndex) ? "caret down" : "caret right"}/>}
+                {endorsement.reviewer_name}{endorsement.review_count > 0 && ` (${endorsement.review_count})`}
               </Header>
 
               {mostRecentEndorsement && (
                 <div className="ui center aligned content mt-5">
-                  {i18next.t("Most recent endorsement:")}&nbsp;
+                  {i18next.t("Endorsement:")}&nbsp;
                   <a href={mostRecentEndorsement.url} target="_blank" rel="noopener noreferrer">
                     {this.formatDate(mostRecentEndorsement.created)}
                   </a>
@@ -203,8 +240,8 @@ export class EndorsementsDisplay extends Component {
               )}
 
             </Accordion.Title>
-            <Accordion.Content active={activeIndex === endorsementIndex}>
-              <Table striped>
+            <Accordion.Content active={activeIndices.includes(endorsementIndex)}>
+              <Table striped unstackable>
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell collapsing>{i18next.t("Version")}</Table.HeaderCell>
@@ -214,17 +251,17 @@ export class EndorsementsDisplay extends Component {
                 <Table.Body>
                   {sortedReviews.map((item, itemIndex) => (
                     <Table.Row key={`review-${item.index}-${itemIndex}`}>
-                      <Table.Cell textAlign="center">{this.getVersion(item, allVersions, latestVersion)}</Table.Cell>
+                      <Table.Cell textAlign="center" className="right bordered">{this.getVersion(item, allVersions, latestVersion)}</Table.Cell>
                       <Table.Cell>
                         <Grid divided compact="true">
                           {item.reviews.reduce((rows, review, idx) => {
-                            if (idx % 3 === 0) rows.push([]);
+                            if (idx % 2 === 0) rows.push([]);
                             rows[rows.length - 1].push(review);
                             return rows;
                           }, []).map((rowReviews, rowIdx) => (
                             <Grid.Row key={`row-${item.index}-${rowIdx}`}>
                               {rowReviews.map((review, idx) => (
-                                <Grid.Column key={`col-${review.created}-${idx}`} width={5}>
+                                <Grid.Column key={`col-${review.created}-${idx}`} computer={8} tablet={8} mobile={16} textAlign="center">
                                   <a
                                     href={review.url}
                                     target="_blank"
