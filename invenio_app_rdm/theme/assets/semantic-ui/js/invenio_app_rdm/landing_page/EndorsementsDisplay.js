@@ -1,8 +1,8 @@
-import React, {Component} from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import {Grid, Accordion, Icon, Header, Segment, Table} from "semantic-ui-react";
 import {i18next} from "@translations/invenio_app_rdm/i18next";
-import { useVersions } from "./VersionsProvider";
+import { useSharedVersions } from "./useSharedVersions";
 
 const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, versionsError }) => {
   const [activeIndices, setActiveIndices] = React.useState([]);
@@ -52,7 +52,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
   }
 
   const getVersionWithIcon = (review, versions, latestVersion) => {
-    if(versions === {})
+    if(Object.keys(versions).length === 0)
       return <>v{review.index}</>;
 
     const isLatest = review.index === latestVersion.index;
@@ -133,7 +133,6 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
       {validEndorsements.map((endorsement, endorsementIndex) => {
         const mostRecentEndorsement = getMostRecent(endorsement.endorsement_list);
         const mostRecentReview = getMostRecent(endorsement.review_list);
-        const latestVersion = allVersions.hits.find(item => item.is_latest);
         const sortedReviews = getSortedReviews(endorsement.review_list);
         const hasReviews = endorsement.review_list.length > 0;
 
@@ -223,10 +222,10 @@ EndorsementsDisplayContent.propTypes = {
 };
 
 export const EndorsementsDisplay = ({ record }) => {
-  const { allVersions, versionsLoading, versionsError } = useVersions();
-  
+  const { allVersions, versionsLoading, versionsError } = useSharedVersions(record);
+
   return (
-    <EndorsementsDisplayContent 
+    <EndorsementsDisplayContent
       record={record}
       allVersions={allVersions}
       versionsLoading={versionsLoading}

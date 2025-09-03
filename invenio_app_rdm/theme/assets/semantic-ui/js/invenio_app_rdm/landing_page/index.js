@@ -16,7 +16,6 @@ import { ExportDropdown } from "./ExportDropdown";
 import { EndorsementRequestDropdown } from "./EndorsementRequestDropdown";
 import { EndorsementsDisplay } from "./EndorsementsDisplay";
 import { CommunitiesManagement } from "./CommunitiesManagement";
-import { VersionsProvider } from "./VersionsProvider";
 import Overridable, { OverridableContext, overrideStore } from "react-overridable";
 
 const recordManagementAppDiv = document.getElementById("recordManagement");
@@ -57,28 +56,24 @@ function renderRecordManagement(element) {
   );
 }
 
-if (recordVersionsAppDiv || recordEndorsementDisplayDiv) {
-  const record = recordVersionsAppDiv 
-    ? JSON.parse(recordVersionsAppDiv.dataset.record)
-    : JSON.parse(recordEndorsementDisplayDiv.dataset.record);
-
-  const VersionsWrapper = () => (
-    <VersionsProvider record={record}>
-      {recordVersionsAppDiv && (
-        <RecordVersionsList
-          record={record}
-          isPreview={JSON.parse(recordVersionsAppDiv.dataset.preview)}
-        />
-      )}
-      {recordEndorsementDisplayDiv && (
-        <EndorsementsDisplay record={record} />
-      )}
-    </VersionsProvider>
+// Handle versions sidebar
+if (recordVersionsAppDiv) {
+  const record = JSON.parse(recordVersionsAppDiv.dataset.record);
+  ReactDOM.render(
+    <RecordVersionsList
+      record={record}
+      isPreview={JSON.parse(recordVersionsAppDiv.dataset.preview)}
+    />,
+    recordVersionsAppDiv
   );
+}
 
-  if (recordVersionsAppDiv) {
-    ReactDOM.render(<VersionsWrapper />, recordVersionsAppDiv);
-  }
+if (recordEndorsementDisplayDiv) {
+  const record = JSON.parse(recordEndorsementDisplayDiv.dataset.record);
+  ReactDOM.render(
+    <EndorsementsDisplay record={record} />,
+    recordEndorsementDisplayDiv
+  );
 }
 
 if (recordCitationAppDiv) {
@@ -113,15 +108,6 @@ if (recordEndorsementRequestDiv
   );
 }
 
-if (recordEndorsementDisplayDiv && !recordVersionsAppDiv) {
-  const record = JSON.parse(recordEndorsementDisplayDiv.dataset.record);
-  ReactDOM.render(
-    <VersionsProvider record={record}>
-      <EndorsementsDisplay record={record} />
-    </VersionsProvider>,
-    recordEndorsementDisplayDiv
-  );
-}
 
 if (sidebarCommunitiesManageDiv) {
   const recordCommunitySearchConfig = JSON.parse(

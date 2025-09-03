@@ -13,7 +13,7 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import PropTypes from "prop-types";
 import { Trans } from "react-i18next";
 import { ErrorMessage } from "react-invenio-forms";
-import { useVersions } from "./VersionsProvider";
+import { useSharedVersions } from "./useSharedVersions";
 
 const deserializeRecord = (record) => ({
   id: record.id,
@@ -187,7 +187,7 @@ RecordVersionsListContent.propTypes = {
 };
 
 export const RecordVersionsList = ({ record, isPreview }) => {
-  const { allVersions, versionsLoading, versionsError } = useVersions();
+  const { allVersions, versionsLoading, versionsError } = useSharedVersions(record);
   
   return (
     <RecordVersionsListContent 
