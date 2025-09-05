@@ -1,5 +1,5 @@
 {%
-  if record.endorsements | selectattr('endorsement_list') | list
+  if record.endorsements
       and config.NOTIFY_PHASE_1_ENABLED
 %}
 <div class="sidebar-container">
