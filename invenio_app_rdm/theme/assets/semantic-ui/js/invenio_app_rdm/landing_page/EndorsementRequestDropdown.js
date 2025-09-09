@@ -18,14 +18,14 @@ const getStatusDisplayName = (status) => {
   return statusMap[status] || status;
 };
 
-class ReviewerListTable extends Component {
-  getStatusLabel = (reviewer) => {
-    const labelClass = reviewer.status === 'available' ? 'green' : '';
-    return <span className={`ui ${labelClass} label`}>{i18next.t(getStatusDisplayName(reviewer.status))}</span>;
+class ActorListTable extends Component {
+  getStatusLabel = (actor) => {
+    const labelClass = actor.status === 'available' ? 'green' : '';
+    return <span className={`ui ${labelClass} label`}>{i18next.t(getStatusDisplayName(actor.status))}</span>;
   };
 
   render() {
-    const { reviewerOptions } = this.props;
+    const { actorOptions } = this.props;
 
     return (
       <Table
@@ -41,16 +41,16 @@ class ReviewerListTable extends Component {
       >
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Reviewer")}</Table.HeaderCell>
+            <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Actor")}</Table.HeaderCell>
             <Table.HeaderCell style={{ width: '35%' }}>{i18next.t("Status")}</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {reviewerOptions.map((reviewer, index) => (
-            <Table.Row key={`reviewer-${index}`}>
-              <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{reviewer.reviewer_name}</Table.Cell>
+          {actorOptions.map((actor, index) => (
+            <Table.Row key={`actor-${index}`}>
+              <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.actor_name}</Table.Cell>
               <Table.Cell style={{ width: '30%' }}>
-                {this.getStatusLabel(reviewer)}
+                {this.getStatusLabel(actor)}
               </Table.Cell>
             </Table.Row>
           ))}
@@ -60,8 +60,8 @@ class ReviewerListTable extends Component {
   }
 }
 
-ReviewerListTable.propTypes = {
-  reviewerOptions: PropTypes.array.isRequired,
+ActorListTable.propTypes = {
+  actorOptions: PropTypes.array.isRequired,
 };
 
 class EndorsementRequestForm extends Component {
@@ -72,7 +72,7 @@ class EndorsementRequestForm extends Component {
       <Grid>
         <Grid.Column width={11}>
           <Dropdown
-            aria-label={i18next.t("Reviewer selection")}
+            aria-label={i18next.t("Actor selection")}
             selection
             fluid
             selectOnNavigation={true}
@@ -87,7 +87,7 @@ class EndorsementRequestForm extends Component {
             fluid
             onClick={onSubmit}
             loading={loading}
-            title={i18next.t("Request reviewer for endorsement")}
+            title={i18next.t("Request actor for endorsement")}
           >
             {i18next.t("Request")}
           </Button>
@@ -109,16 +109,16 @@ export class EndorsementRequestDropdown extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedReviewerId: null,
+      selectedActorId: null,
       loading: false,
       error: null,
       endoReqSuccess: false,
-      reviewerOptions: []
+      actorOptions: []
     };
   }
 
   componentDidMount() {
-    this.loadReviewerOptions();
+    this.loadActorOptions();
   }
 
 
@@ -155,10 +155,10 @@ export class EndorsementRequestDropdown extends Component {
     }
   };
 
-  loadReviewerOptions = async () => {
-    const fetchReviewerOption = async () => {
-      const { reviewerOptionEndpoint } = this.props;
-      return await http.get(reviewerOptionEndpoint, {
+  loadActorOptions = async () => {
+    const fetchActorOption = async () => {
+      const { actorOptionEndpoint } = this.props;
+      return await http.get(actorOptionEndpoint, {
         headers: {
           Accept: "application/json",
         },
@@ -166,18 +166,18 @@ export class EndorsementRequestDropdown extends Component {
     };
 
     await this.handleAsyncFetch(
-      fetchReviewerOption,
+      fetchActorOption,
       null,
-      'An error occurred while fetching reviewer options.',
+      'An error occurred while fetching actor options.',
       null,
       (response) => {
-        const reviewerOptions = [...response.data].sort(
-          (a, b) => a.reviewer_name.localeCompare(b.reviewer_name)
+        const actorOptions = [...response.data].sort(
+          (a, b) => a.actor_name.localeCompare(b.actor_name)
         );
-        const availableReviewers = reviewerOptions.filter(option => option.available);
+        const availableActors = actorOptions.filter(option => option.available);
         this.setState({
-          reviewerOptions: reviewerOptions,
-          selectedReviewerId: availableReviewers.length > 0 ? availableReviewers[0].reviewer_id : null
+          actorOptions: actorOptions,
+          selectedActorId: availableActors.length > 0 ? availableActors[0].actor_id : null
         });
       }
 
@@ -189,7 +189,7 @@ export class EndorsementRequestDropdown extends Component {
     const fetchRecordEndorsementRequests = async () => {
       const { endorsementRequestEndpoint } = this.props;
       return await http.post(endorsementRequestEndpoint,
-        {'reviewer_id': this.state.selectedReviewerId},
+        {'actor_id': this.state.selectedActorId},
         {
           headers: {
             Accept: "application/json",
@@ -204,13 +204,13 @@ export class EndorsementRequestDropdown extends Component {
       null,
       () => {
         this.setState({ endoReqSuccess: true });
-        this.loadReviewerOptions();
+        this.loadActorOptions();
       }
     );
   };
 
-  handleReviewerChange = (event, data) => {
-    this.setState({ selectedReviewerId: data.value });
+  handleActorChange = (event, data) => {
+    this.setState({ selectedActorId: data.value });
   };
 
   handleSubmit = () => {
@@ -219,13 +219,13 @@ export class EndorsementRequestDropdown extends Component {
 
 
   render() {
-    const { reviewerOptions, selectedReviewerId, error, endoReqSuccess } = this.state;
-    const availableReviewers = reviewerOptions.filter(option => option.available);
-    const endorsementRequestOptions = availableReviewers.map((option, index) => {
+    const { actorOptions, selectedActorId, error, endoReqSuccess } = this.state;
+    const availableActors = actorOptions.filter(option => option.available);
+    const endorsementRequestOptions = availableActors.map((option, index) => {
       return {
         key: `option-${index}`,
-        text: option.reviewer_name,
-        value: option.reviewer_id,
+        text: option.actor_name,
+        value: option.actor_id,
       };
     });
 
@@ -249,7 +249,7 @@ export class EndorsementRequestDropdown extends Component {
                 <div className="header">
                   {i18next.t("Endorsement request sent successfully")}
                 </div>
-                <p>{i18next.t("Your endorsement request has been sent to the reviewer.")}</p>
+                <p>{i18next.t("Your endorsement request has been sent to the actor.")}</p>
               </div>
             }
           />
@@ -257,14 +257,14 @@ export class EndorsementRequestDropdown extends Component {
         {endorsementRequestOptions.length > 0 && (
           <EndorsementRequestForm
             options={endorsementRequestOptions}
-            selectedId={selectedReviewerId}
+            selectedId={selectedActorId}
             loading={this.state.loading}
-            onChange={this.handleReviewerChange}
+            onChange={this.handleActorChange}
             onSubmit={this.handleSubmit}
           />
         )}
-      {reviewerOptions.length > 0 && (
-        <ReviewerListTable reviewerOptions={reviewerOptions} />
+      {actorOptions.length > 0 && (
+        <ActorListTable actorOptions={actorOptions} />
       )}
       </>
     );
@@ -274,5 +274,5 @@ export class EndorsementRequestDropdown extends Component {
 EndorsementRequestDropdown.propTypes = {
   formats: PropTypes.array.isRequired,
   endorsementRequestEndpoint: PropTypes.string.isRequired,
-  reviewerOptionEndpoint: PropTypes.string.isRequired,
+  actorOptionEndpoint: PropTypes.string.isRequired,
 };

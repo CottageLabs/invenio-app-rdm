@@ -97,12 +97,12 @@ if (recordExportDownloadDiv) {
 
 if (recordEndorsementRequestDiv
     && recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint
-    && recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint) {
+    && recordEndorsementRequestDiv.dataset.actorOptionEndpoint) {
   ReactDOM.render(
     <EndorsementRequestDropdown
         formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
         endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
-        reviewerOptionEndpoint={recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint}
+        actorOptionEndpoint={recordEndorsementRequestDiv.dataset.actorOptionEndpoint}
     />,
     recordEndorsementRequestDiv
   );

@@ -1,5 +1,5 @@
 {% if record.links.endorsement_request
-      and record.links.endorsement_request_reviewers
+      and record.links.endorsement_request_actors
       and config.NOTIFY_PCI_ENDORSEMENT
       and config.NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT
       %}
@@ -11,15 +11,15 @@
   <div id="endorsement-request-record" class="ui segment bottom attached exports rdm-sidebar">
 
     {% set formats = [
-    { 'name': 'PCI Evolutionary Biology', 'reviewer_id': 1 },
-    { 'name': 'Reviewer 2', 'reviewer_id': 2 },
+    { 'name': 'PCI Evolutionary Biology', 'actor_id': 1 },
+    { 'name': 'Actor 2', 'actor_id': 2 },
     ] %}
 
     <div
       id="recordEndorsementRequest"
       data-formats='{{ formats | tojson }}'
       data-endorsement-request-endpoint="{{ record.links.endorsement_request }}"
-      data-reviewer-option-endpoint="{{ record.links.endorsement_request_reviewers }}"
+      data-actor-option-endpoint="{{ record.links.endorsement_request_actors }}"
     ></div>
   </div>
 </div>
