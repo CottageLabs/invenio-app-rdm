@@ -7,11 +7,12 @@
 // under the terms of the MIT License; see LICENSE file for more details.
 
 import _get from "lodash/get";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Grid, Icon, Message, Placeholder, List, Divider } from "semantic-ui-react";
 import { i18next } from "@translations/invenio_app_rdm/i18next";
 import PropTypes from "prop-types";
-import { withCancel, http, ErrorMessage } from "react-invenio-forms";
+import { ErrorMessage } from "react-invenio-forms";
+import { useSharedVersions } from "./useSharedVersions";
 
 const deserializeRecord = (record) => ({
   id: record.id,
@@ -77,52 +78,19 @@ const PreviewMessage = () => {
   );
 };
 
-export const RecordVersionsList = ({ record, isPreview }) => {
+const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoading, versionsError }) => {
   const recordDeserialized = deserializeRecord(record);
   const recordParentDOI = recordDeserialized?.parent?.pids?.doi?.identifier;
   const recordDraftParentDOIFormat = recordDeserialized?.new_draft_parent_doi;
   const recid = recordDeserialized.id;
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [currentRecordInResults, setCurrentRecordInResults] = useState(false);
-  const [recordVersions, setRecordVersions] = useState({});
 
-  useEffect(() => {
-    const fetchVersions = async () => {
-      return await http.get(
-        `${recordDeserialized.links.versions}?size=${NUMBER_OF_VERSIONS}&sort=version&allversions=true`,
-        {
-          headers: {
-            Accept: "application/vnd.inveniordm.v1+json",
-          },
-          withCredentials: true,
-        }
-      );
-    };
-
-    const cancellableFetchVersions = withCancel(fetchVersions());
-
-    async function fetchVersionsAndSetState() {
-      try {
-        const result = await cancellableFetchVersions.promise;
-        let { hits, total } = result.data.hits;
-        hits = hits.map(deserializeRecord);
-        setCurrentRecordInResults(hits.some((record) => record.id === recid));
-        setRecordVersions({ hits, total });
-        setLoading(false);
-      } catch (error) {
-        if (error !== "UNMOUNTED") {
-          setError(i18next.t("An error occurred while fetching the versions."));
-          setLoading(false);
-        }
-      }
+  // Check if current record is in results when versions load
+  React.useEffect(() => {
+    if (!versionsLoading && allVersions.hits) {
+      setCurrentRecordInResults(allVersions.hits.some((record) => record.id === recid));
     }
-    fetchVersionsAndSetState();
-
-    return () => {
-      cancellableFetchVersions?.cancel();
-    };
-  }, [recordDeserialized.links.versions, recid]);
+  }, [allVersions, versionsLoading, recid]);
 
   const loadingcmp = () => {
     return isPreview ? (
@@ -142,13 +110,13 @@ export const RecordVersionsList = ({ record, isPreview }) => {
   };
 
   const errorMessagecmp = () => (
-    <ErrorMessage className="rel-mr-1 rel-ml-1" content={i18next.t(error)} negative />
+    <ErrorMessage className="rel-mr-1 rel-ml-1" content={i18next.t(versionsError)} negative />
   );
 
   const recordVersionscmp = () => (
     <List divided>
       {isPreview ? <PreviewMessage /> : null}
-      {recordVersions.hits.map((item) => (
+      {allVersions.hits.slice(0, NUMBER_OF_VERSIONS).map((item) => (
         <RecordVersionItem
           key={item.id}
           item={item}
@@ -161,7 +129,7 @@ export const RecordVersionsList = ({ record, isPreview }) => {
           <RecordVersionItem item={recordDeserialized} activeVersion />
         </>
       )}
-      {recordVersions.total > 1 && (
+      {allVersions.total > 1 && (
         <Grid className="mt-0">
           <Grid.Row centered>
             <a
@@ -169,7 +137,7 @@ export const RecordVersionsList = ({ record, isPreview }) => {
               className="font-small"
             >
               {i18next.t(`View all {{count}} versions`, {
-                count: recordVersions.total,
+                count: allVersions.total,
               })}
             </a>
           </Grid.Row>
@@ -206,7 +174,29 @@ export const RecordVersionsList = ({ record, isPreview }) => {
     </List>
   );
 
-  return loading ? loadingcmp() : error ? errorMessagecmp() : recordVersionscmp();
+  return versionsLoading ? loadingcmp() : versionsError ? errorMessagecmp() : recordVersionscmp();
+};
+
+RecordVersionsListContent.propTypes = {
+  record: PropTypes.object.isRequired,
+  isPreview: PropTypes.bool.isRequired,
+  allVersions: PropTypes.object.isRequired,
+  versionsLoading: PropTypes.bool.isRequired,
+  versionsError: PropTypes.string,
+};
+
+export const RecordVersionsList = ({ record, isPreview }) => {
+  const { allVersions, versionsLoading, versionsError } = useSharedVersions(record);
+
+  return (
+    <RecordVersionsListContent
+      record={record}
+      isPreview={isPreview}
+      allVersions={allVersions}
+      versionsLoading={versionsLoading}
+      versionsError={versionsError}
+    />
+  );
 };
 
 RecordVersionsList.propTypes = {

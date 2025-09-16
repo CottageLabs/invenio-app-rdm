@@ -56,13 +56,23 @@ function renderRecordManagement(element) {
   );
 }
 
+// Handle versions sidebar
 if (recordVersionsAppDiv) {
+  const record = JSON.parse(recordVersionsAppDiv.dataset.record);
   ReactDOM.render(
     <RecordVersionsList
-      record={JSON.parse(recordVersionsAppDiv.dataset.record)}
+      record={record}
       isPreview={JSON.parse(recordVersionsAppDiv.dataset.preview)}
     />,
     recordVersionsAppDiv
+  );
+}
+
+if (recordEndorsementDisplayDiv) {
+  const record = JSON.parse(recordEndorsementDisplayDiv.dataset.record);
+  ReactDOM.render(
+    <EndorsementsDisplay record={record} />,
+    recordEndorsementDisplayDiv
   );
 }
 
@@ -87,24 +97,17 @@ if (recordExportDownloadDiv) {
 
 if (recordEndorsementRequestDiv
     && recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint
-    && recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint) {
+    && recordEndorsementRequestDiv.dataset.actorOptionEndpoint) {
   ReactDOM.render(
     <EndorsementRequestDropdown
         formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
         endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
-        reviewerOptionEndpoint={recordEndorsementRequestDiv.dataset.reviewerOptionEndpoint}
+        actorOptionEndpoint={recordEndorsementRequestDiv.dataset.actorOptionEndpoint}
     />,
     recordEndorsementRequestDiv
   );
 }
 
-if (recordEndorsementDisplayDiv) {
-  ReactDOM.render(
-    <EndorsementsDisplay
-      record={JSON.parse(recordEndorsementDisplayDiv.dataset.record)}/>,
-    recordEndorsementDisplayDiv
-  );
-}
 
 if (sidebarCommunitiesManageDiv) {
   const recordCommunitySearchConfig = JSON.parse(
