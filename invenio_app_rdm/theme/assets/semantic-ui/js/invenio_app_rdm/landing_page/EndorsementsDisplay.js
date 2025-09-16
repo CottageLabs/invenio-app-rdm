@@ -75,7 +75,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
 
   };
 
-  // Filter reviewers that have endorsements
+  // Filter actors that have endorsements
   const validEndorsements = record.endorsements.filter(
     endorsement => endorsement.endorsement_list.length > 0 || endorsement.review_list.length > 0
   );
@@ -94,7 +94,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
     return null;
   }
 
-  // Calculate total review count and find most recent review across all reviewers
+  // Calculate total review count and find most recent review across all actors
   let totalReviewCount = 0;
   let mostRecentReview = null;
 
@@ -136,7 +136,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
         const sortedReviews = getSortedReviews(endorsement.review_list);
         const hasReviews = endorsement.review_list.length > 0;
 
-        return (<Accordion key={`endorsement-${endorsement.reviewer_id}-${endorsementIndex}`} className="ui fluid accordion segment">
+        return (<Accordion key={`endorsement-${endorsement.actor_id}-${endorsementIndex}`} className="ui fluid accordion segment">
           <Accordion.Title
             active={activeIndices.includes(endorsementIndex)}
             index={endorsementIndex}
@@ -146,7 +146,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
 
             <Header as="div" className="ui left aligned header small mb-0 trigger">
               {hasReviews && <Icon name={activeIndices.includes(endorsementIndex) ? "caret down" : "caret right"}/>}
-              {endorsement.reviewer_name}{endorsement.review_count > 0 && ` (${endorsement.review_count})`}
+              {endorsement.actor_name}{endorsement.review_count > 0 && ` (${endorsement.review_count})`}
             </Header>
 
             {mostRecentEndorsement && (
