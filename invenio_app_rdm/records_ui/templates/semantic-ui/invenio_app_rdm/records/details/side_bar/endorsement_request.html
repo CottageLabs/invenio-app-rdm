@@ -9,15 +9,8 @@
     {{ _('Endorsement Request') }}
     </h2>
   <div id="endorsement-request-record" class="ui segment bottom attached exports rdm-sidebar">
-
-    {% set formats = [
-    { 'name': 'PCI Evolutionary Biology', 'actor_id': 1 },
-    { 'name': 'Actor 2', 'actor_id': 2 },
-    ] %}
-
     <div
       id="recordEndorsementRequest"
-      data-formats='{{ formats | tojson }}'
       data-endorsement-request-endpoint="{{ record.links.endorsement_request }}"
       data-actor-option-endpoint="{{ record.links.endorsement_request_actors }}"
     ></div>

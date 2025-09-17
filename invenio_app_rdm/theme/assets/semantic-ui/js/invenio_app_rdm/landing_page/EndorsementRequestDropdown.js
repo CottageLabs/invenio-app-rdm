@@ -113,7 +113,8 @@ export class EndorsementRequestDropdown extends Component {
       loading: false,
       error: null,
       endoReqSuccess: false,
-      actorOptions: []
+      actorOptions: [],
+      shouldRenderComponent: false
     };
   }
 
@@ -177,8 +178,17 @@ export class EndorsementRequestDropdown extends Component {
         const availableActors = actorOptions.filter(option => option.available);
         this.setState({
           actorOptions: actorOptions,
-          selectedActorId: availableActors.length > 0 ? availableActors[0].actor_id : null
+          selectedActorId: availableActors.length > 0 ? availableActors[0].actor_id : null,
+          shouldRenderComponent: actorOptions.length > 0
         });
+
+        // Hide the entire sidebar section if no actors are available
+        if (actorOptions.length === 0) {
+          const sidebarContainer = document.querySelector('#recordEndorsementRequest')?.closest('.sidebar-container');
+          if (sidebarContainer) {
+            sidebarContainer.style.display = 'none';
+          }
+        }
       }
 
     );
@@ -219,7 +229,11 @@ export class EndorsementRequestDropdown extends Component {
 
 
   render() {
-    const { actorOptions, selectedActorId, error, endoReqSuccess } = this.state;
+    const { actorOptions, selectedActorId, error, endoReqSuccess, shouldRenderComponent } = this.state;
+
+    if (!shouldRenderComponent) {
+      return null;
+    }
     const availableActors = actorOptions.filter(option => option.available);
     const endorsementRequestOptions = availableActors.map((option, index) => {
       return {
@@ -272,7 +286,7 @@ export class EndorsementRequestDropdown extends Component {
 }
 
 EndorsementRequestDropdown.propTypes = {
-  formats: PropTypes.array.isRequired,
   endorsementRequestEndpoint: PropTypes.string.isRequired,
   actorOptionEndpoint: PropTypes.string.isRequired,
 };
+
