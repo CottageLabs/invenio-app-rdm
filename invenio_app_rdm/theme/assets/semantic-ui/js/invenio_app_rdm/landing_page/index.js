@@ -100,7 +100,6 @@ if (recordEndorsementRequestDiv
     && recordEndorsementRequestDiv.dataset.actorOptionEndpoint) {
   ReactDOM.render(
     <EndorsementRequestDropdown
-        formats={JSON.parse(recordEndorsementRequestDiv.dataset.formats)}
         endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
         actorOptionEndpoint={recordEndorsementRequestDiv.dataset.actorOptionEndpoint}
     />,
