@@ -1,7 +1,6 @@
-{% if record.links.endorsement_request
-      and record.links.endorsement_request_actors
-      and config.NOTIFY_PCI_ENDORSEMENT
+{% if config.NOTIFY_PCI_ENDORSEMENT
       and config.NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT
+      and has_available_actors
       %}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">

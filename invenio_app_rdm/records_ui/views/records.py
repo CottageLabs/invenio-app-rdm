@@ -22,6 +22,7 @@ from invenio_communities.communities.resources.serializer import (
 from invenio_communities.errors import CommunityDeletedError
 from invenio_communities.proxies import current_communities
 from invenio_communities.views.communities import render_community_theme_template
+from invenio_notify.records.models import ActorModel
 from invenio_previewer.extensions import default as default_previewer
 from invenio_previewer.proxies import current_previewer
 from invenio_rdm_records.proxies import current_rdm_records
@@ -230,6 +231,19 @@ def record_detail(
     )
     theme = resolved_community_ui.get("theme", {}) if resolved_community else None
 
+    # Check if there are available actors for endorsement requests
+    # Only check for logged in users, record owners, and if the feature is enabled
+    has_available_actors = False
+    if (current_app.config.get("NOTIFY_PCI_ENDORSEMENT") and
+            current_app.config.get("NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT")):
+        if current_user.is_authenticated:
+            # Check if user is the record owner
+            if record._record.parent.access.owned_by.owner_id == current_user.id:
+                try:
+                    has_available_actors = ActorModel.has_available_actors(record._record.id)
+                except Exception:
+                    pass
+
     return render_community_theme_template(
         current_app.config.get("APP_RDM_RECORD_LANDING_PAGE_TEMPLATE"),
         theme=theme,
@@ -262,6 +276,7 @@ def record_detail(
         record_owner_id=(
             record_owner.get("id")
         ),  # record created with system_identity have not owners e.g demo
+        has_available_actors=has_available_actors,
     )
 
 
