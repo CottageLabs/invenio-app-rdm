@@ -102,6 +102,8 @@ if (recordEndorsementRequestDiv
     <EndorsementRequestDropdown
         endorsementRequestEndpoint={recordEndorsementRequestDiv.dataset.endorsementRequestEndpoint}
         actorOptionEndpoint={recordEndorsementRequestDiv.dataset.actorOptionEndpoint}
+        availableActors={JSON.parse(recordEndorsementRequestDiv.dataset.availableActors)}
+        statusLabels={JSON.parse(recordEndorsementRequestDiv.dataset.statusLabels)}
     />,
     recordEndorsementRequestDiv
   );
