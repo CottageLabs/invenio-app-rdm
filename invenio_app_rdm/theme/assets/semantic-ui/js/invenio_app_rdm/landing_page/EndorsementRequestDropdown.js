@@ -267,6 +267,7 @@ export class EndorsementRequestDropdown extends Component {
             <SuccessIcon
               timeOutDelay={10000}
               show={endoReqSuccess}
+              onTimeout={() => this.setState({ endoReqSuccess: false })}
             />
             <div role="alert" className="ui positive message">
               <div className="header">
