@@ -1,7 +1,4 @@
-{% if config.NOTIFY_PCI_ENDORSEMENT
-      and config.NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT
-      and has_available_actors
-      %}
+{% if enable_endorsement_request_section %}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">
     <i class="icon paper plane outline"></i>

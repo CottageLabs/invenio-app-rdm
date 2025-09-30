@@ -231,16 +231,16 @@ def record_detail(
     )
     theme = resolved_community_ui.get("theme", {}) if resolved_community else None
 
-    # Check if there are available actors for endorsement requests
+    # Check if endorsement requests section should be displayed
     # Only check for logged in users, record owners, and if the feature is enabled
-    has_available_actors = False
+    enable_endorsement_request_section = False
     if (current_app.config.get("NOTIFY_PCI_ENDORSEMENT") and
             current_app.config.get("NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT")):
         if current_user.is_authenticated:
             # Check if user is the record owner
             if record._record.parent.access.owned_by.owner_id == current_user.id:
                 try:
-                    has_available_actors = ActorModel.has_available_actors(record._record.id)
+                    enable_endorsement_request_section = ActorModel.has_available_actors(record._record.id)
                 except Exception:
                     pass
 
@@ -276,7 +276,7 @@ def record_detail(
         record_owner_id=(
             record_owner.get("id")
         ),  # record created with system_identity have not owners e.g demo
-        has_available_actors=has_available_actors,
+        has_available_actors=enable_endorsement_request_section,
     )
 
 
