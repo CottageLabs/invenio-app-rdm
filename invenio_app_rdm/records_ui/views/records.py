@@ -37,8 +37,6 @@ from marshmallow import ValidationError
 from invenio_app_rdm.records_ui.previewer.iiif_simple import (
     previewable_extensions as image_extensions,
 )
-
-from ..utils import get_external_resources
 from .decorators import (
     add_signposting_content_resources,
     add_signposting_landing_page,
@@ -54,6 +52,7 @@ from .decorators import (
     pass_record_or_draft,
 )
 from .deposits import get_user_communities_memberships, load_custom_fields
+from ..utils import get_external_resources
 
 
 def get_record_community(record):
@@ -276,7 +275,7 @@ def record_detail(
         record_owner_id=(
             record_owner.get("id")
         ),  # record created with system_identity have not owners e.g demo
-        has_available_actors=enable_endorsement_request_section,
+        enable_endorsement_request_section=enable_endorsement_request_section,
     )
 
 
