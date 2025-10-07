@@ -1,8 +1,4 @@
-{% if record.links.endorsement_request
-      and record.links.endorsement_request_actors
-      and config.NOTIFY_PCI_ENDORSEMENT
-      and config.NOTIFY_PCI_ANNOUNCEMENT_OF_ENDORSEMENT
-      %}
+{% if enable_endorsement_request_section %}
 <div class="sidebar-container">
   <h2 class="ui medium top attached header mt-0">
     <i class="icon paper plane outline"></i>
@@ -13,6 +9,8 @@
       id="recordEndorsementRequest"
       data-endorsement-request-endpoint="{{ record.links.endorsement_request }}"
       data-actor-option-endpoint="{{ record.links.endorsement_request_actors }}"
+      data-available-actors='{{ config.get("NOTIFY_AVAILABLE_ACTORS", {}) | tojson }}'
+      data-status-labels='{{ config.get("NOTIFY_ENDORSEMENT_STATUS_LABELS", {}) | tojson }}'
     ></div>
   </div>
 </div>

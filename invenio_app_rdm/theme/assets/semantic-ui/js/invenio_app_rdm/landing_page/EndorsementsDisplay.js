@@ -141,7 +141,8 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
             active={activeIndices.includes(endorsementIndex)}
             index={endorsementIndex}
             onClick={hasReviews ? handleAccordionClick : undefined}
-            className="title"
+            className={hasReviews ? "title" : "title no-accordion"}
+            style={hasReviews ? {} : { cursor: 'default' }}
           >
 
             <Header as="div" className="ui left aligned header small mb-0 trigger">
@@ -168,7 +169,8 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
             )}
 
           </Accordion.Title>
-          <Accordion.Content active={activeIndices.includes(endorsementIndex)}>
+          {hasReviews && (
+            <Accordion.Content active={activeIndices.includes(endorsementIndex)}>
             <Table striped unstackable>
               <Table.Header>
                 <Table.Row>
@@ -208,6 +210,7 @@ const EndorsementsDisplayContent = ({ record, allVersions, versionsLoading, vers
               </Table.Body>
             </Table>
           </Accordion.Content>
+          )}
         </Accordion>)
       })}
     </Segment>

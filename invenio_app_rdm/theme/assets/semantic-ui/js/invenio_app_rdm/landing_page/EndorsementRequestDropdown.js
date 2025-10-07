@@ -1,31 +1,47 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import PropTypes from "prop-types";
-import { Grid, Dropdown, Button, Table } from "semantic-ui-react";
-import { i18next } from "@translations/invenio_app_rdm/i18next";
-import { http, withCancel, ErrorMessage } from "react-invenio-forms";
-import { SuccessIcon } from "@js/invenio_communities/members";
+import {Grid, Dropdown, Button, Table} from "semantic-ui-react";
+import {i18next} from "@translations/invenio_app_rdm/i18next";
+import {http, withCancel, ErrorMessage} from "react-invenio-forms";
+import {SuccessIcon} from "@js/invenio_communities/members";
 
-const getStatusDisplayName = (status) => {
-  const statusMap = {
-    'coar-notify:ReviewAction': 'Review',
-    'coar-notify:EndorsementAction': 'Endorsement',
-    'TentativeAccept': 'Tentative Accept',
-    'Reject': 'Reject',
-    'TentativeReject': 'Tentative Reject',
-    'available': 'Available',
-  };
-
-  return statusMap[status] || status;
+const tableStyle = {
+  marginTop: '1rem',
+  width: '100%',
+  tableLayout: 'fixed'
 };
 
 class ActorListTable extends Component {
   getStatusLabel = (actor) => {
-    const labelClass = actor.status === 'available' ? 'green' : '';
-    return <span className={`ui ${labelClass} label`}>{i18next.t(getStatusDisplayName(actor.status))}</span>;
+    const {statusLabels} = this.props;
+    const statusConfig = statusLabels[actor.status];
+
+    let displayName, labelClass, labelTitle;
+
+    if (typeof statusConfig === 'string') {
+      displayName = statusConfig;
+    } else if (typeof statusConfig === 'object' && statusConfig !== null) {
+      displayName = statusConfig.label;
+      labelClass = statusConfig.labelClass || '';
+      labelTitle = statusConfig.labelTitle; // optional
+    } else {
+      displayName = actor.status;
+      labelClass = '';
+    }
+
+    const labelProps = {
+      className: `ui ${labelClass} label`
+    };
+
+    if (labelTitle) {
+      labelProps.title = labelTitle;
+    }
+
+    return <span {...labelProps}>{i18next.t(displayName)}</span>;
   };
 
   render() {
-    const { actorOptions } = this.props;
+    const {actorOptions} = this.props;
 
     return (
       <Table
@@ -33,23 +49,20 @@ class ActorListTable extends Component {
         compact
         size="small"
         unstackable
-        style={{
-          marginTop: '1rem',
-          width: '100%',
-          tableLayout: 'fixed'
-        }}
+        style={tableStyle}
       >
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell style={{ width: '65%' }}>{i18next.t("Actor")}</Table.HeaderCell>
-            <Table.HeaderCell style={{ width: '35%' }}>{i18next.t("Status")}</Table.HeaderCell>
+            <Table.HeaderCell style={{width: '65%'}}>{i18next.t("Actor")}</Table.HeaderCell>
+            <Table.HeaderCell style={{width: '35%'}}>{i18next.t("Status")}</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {actorOptions.map((actor, index) => (
-            <Table.Row key={`actor-${index}`}>
-              <Table.Cell style={{ width: '70%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actor.actor_name}</Table.Cell>
-              <Table.Cell style={{ width: '30%' }}>
+            <Table.Row key={actor.actor_id}>
+              <Table.Cell
+                style={{width: '70%', overflow: 'hidden', textOverflow: 'ellipsis'}}>{actor.actor_name}</Table.Cell>
+              <Table.Cell style={{width: '30%'}}>
                 {this.getStatusLabel(actor)}
               </Table.Cell>
             </Table.Row>
@@ -62,23 +75,25 @@ class ActorListTable extends Component {
 
 ActorListTable.propTypes = {
   actorOptions: PropTypes.array.isRequired,
+  statusLabels: PropTypes.object.isRequired,
 };
 
 class EndorsementRequestForm extends Component {
   render() {
-    const { options, selectedId, loading, onChange, onSubmit } = this.props;
+    const {options, selectedId, loading, onChange, onSubmit} = this.props;
 
     return (
       <Grid>
         <Grid.Column width={11}>
           <Dropdown
+            key={selectedId}
             aria-label={i18next.t("Actor selection")}
             selection
             fluid
             selectOnNavigation={true}
             options={options}
             onChange={onChange}
-            defaultValue={selectedId}
+            value={selectedId}
           />
         </Grid.Column>
         <Grid.Column width={5} className="pl-0">
@@ -99,7 +114,7 @@ class EndorsementRequestForm extends Component {
 
 EndorsementRequestForm.propTypes = {
   options: PropTypes.array.isRequired,
-  selectedId: PropTypes.string,
+  selectedId: PropTypes.number,
   loading: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
@@ -113,8 +128,7 @@ export class EndorsementRequestDropdown extends Component {
       loading: false,
       error: null,
       endoReqSuccess: false,
-      actorOptions: [],
-      shouldRenderComponent: false
+      actorOptions: []
     };
   }
 
@@ -131,7 +145,7 @@ export class EndorsementRequestDropdown extends Component {
     });
     try {
       const response = await cancellablePromise.promise;
-      const newState = { loading: false };
+      const newState = {loading: false};
       if (stateKey) {
         newState[stateKey] = response.data;
       }
@@ -158,7 +172,7 @@ export class EndorsementRequestDropdown extends Component {
 
   loadActorOptions = async () => {
     const fetchActorOption = async () => {
-      const { actorOptionEndpoint } = this.props;
+      const {actorOptionEndpoint} = this.props;
       return await http.get(actorOptionEndpoint, {
         headers: {
           Accept: "application/json",
@@ -172,39 +186,35 @@ export class EndorsementRequestDropdown extends Component {
       'An error occurred while fetching actor options.',
       null,
       (response) => {
-        const actorOptions = [...response.data].sort(
+        const actorOptions = response.data.sort(
           (a, b) => a.actor_name.localeCompare(b.actor_name)
         );
-        const availableActors = actorOptions.filter(option => option.available);
+
+        // Get available options for dropdown
+        const availableOptions = this.getAvailableActorOptions(actorOptions, this.props.availableActors);
+
+        // Reset selectedActorId to first available option or null if none available
+        const newSelectedActorId = availableOptions.length > 0 ? availableOptions[0].value : null;
+
         this.setState({
           actorOptions: actorOptions,
-          selectedActorId: availableActors.length > 0 ? availableActors[0].actor_id : null,
-          shouldRenderComponent: actorOptions.length > 0
+          selectedActorId: newSelectedActorId,
         });
-
-        // Hide the entire sidebar section if no actors are available
-        if (actorOptions.length === 0) {
-          const sidebarContainer = document.querySelector('#recordEndorsementRequest')?.closest('.sidebar-container');
-          if (sidebarContainer) {
-            sidebarContainer.style.display = 'none';
-          }
-        }
       }
-
     );
   };
 
   sendEndorsementRequest = async () => {
-  this.setState({endoReqSuccess: false});
+    this.setState({endoReqSuccess: false});
     const fetchRecordEndorsementRequests = async () => {
-      const { endorsementRequestEndpoint } = this.props;
+      const {endorsementRequestEndpoint} = this.props;
       return await http.post(endorsementRequestEndpoint,
         {'actor_id': this.state.selectedActorId},
         {
           headers: {
             Accept: "application/json",
           },
-      });
+        });
     };
 
     await this.handleAsyncFetch(
@@ -213,35 +223,33 @@ export class EndorsementRequestDropdown extends Component {
       'An error occurred while sending endorsement request.',
       null,
       () => {
-        this.setState({ endoReqSuccess: true });
+        this.setState({endoReqSuccess: true});
         this.loadActorOptions();
       }
     );
   };
 
   handleActorChange = (event, data) => {
-    this.setState({ selectedActorId: data.value });
+    this.setState({selectedActorId: data.value});
   };
 
   handleSubmit = () => {
     this.sendEndorsementRequest();
   };
 
-
-  render() {
-    const { actorOptions, selectedActorId, error, endoReqSuccess, shouldRenderComponent } = this.state;
-
-    if (!shouldRenderComponent) {
-      return null;
-    }
-    const availableActors = actorOptions.filter(option => option.available);
-    const endorsementRequestOptions = availableActors.map((option, index) => {
-      return {
+  getAvailableActorOptions = (actorOptions, availableActors) => {
+    return actorOptions
+      .filter((option) => availableActors.includes(option.status))
+      .map((option, index) => ({
         key: `option-${index}`,
         text: option.actor_name,
         value: option.actor_id,
-      };
-    });
+      }));
+  };
+
+  render() {
+    const {actorOptions, selectedActorId, error, endoReqSuccess} = this.state;
+    const endorsementRequestOptions = this.getAvailableActorOptions(actorOptions, this.props.availableActors);
 
     return (
       <>
@@ -255,18 +263,19 @@ export class EndorsementRequestDropdown extends Component {
           />
         )}
         {endoReqSuccess && (
-          <SuccessIcon
-            timeOutDelay={10000}
-            show={endoReqSuccess}
-            content={
-              <div role="alert" className="ui positive message">
-                <div className="header">
-                  {i18next.t("Endorsement request sent successfully")}
-                </div>
-                <p>{i18next.t("Your endorsement request has been sent to the actor.")}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginLeft: '1rem', marginBottom: '1rem' }}>
+            <SuccessIcon
+              timeOutDelay={10000}
+              show={endoReqSuccess}
+              onTimeout={() => this.setState({ endoReqSuccess: false })}
+            />
+            <div role="alert" className="ui positive message">
+              <div className="header">
+                {i18next.t("Endorsement request sent successfully")}
               </div>
-            }
-          />
+              <p>{i18next.t("Your endorsement request has been sent to the actor.")}</p>
+            </div>
+          </div>
         )}
         {endorsementRequestOptions.length > 0 && (
           <EndorsementRequestForm
@@ -277,9 +286,9 @@ export class EndorsementRequestDropdown extends Component {
             onSubmit={this.handleSubmit}
           />
         )}
-      {actorOptions.length > 0 && (
-        <ActorListTable actorOptions={actorOptions} />
-      )}
+        {actorOptions.length > 0 && (
+          <ActorListTable actorOptions={actorOptions} statusLabels={this.props.statusLabels}/>
+        )}
       </>
     );
   }
@@ -288,5 +297,7 @@ export class EndorsementRequestDropdown extends Component {
 EndorsementRequestDropdown.propTypes = {
   endorsementRequestEndpoint: PropTypes.string.isRequired,
   actorOptionEndpoint: PropTypes.string.isRequired,
+  statusLabels: PropTypes.object.isRequired,
+  availableActors: PropTypes.array.isRequired,
 };
 
