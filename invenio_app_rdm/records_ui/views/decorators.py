@@ -18,6 +18,7 @@ from invenio_communities.communities.resources.serializer import (
     UICommunityJSONSerializer,
 )
 from invenio_communities.proxies import current_communities
+from invenio_notify.constants import NOTIFY_PCI_ENDORSEMENT
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_rdm_records.proxies import current_rdm_records
 from invenio_rdm_records.resources.serializers.signposting import (
@@ -434,6 +435,10 @@ def add_signposting_landing_page(f):
             response.headers["Link"] = (
                 f'<{signposting_link}> ; rel="linkset" ; type="application/linkset+json"'  # fmt: skip
             )
+
+        if current_app.config.get(NOTIFY_PCI_ENDORSEMENT, False):
+            inbox = invenio_url_for("inbox_api.receive_notification")
+            response.headers["Link"] += f' , <{inbox}> ; rel="http://www.w3.org/ns/ldp#inbox"'
 
         return response
 
