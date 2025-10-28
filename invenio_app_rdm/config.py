@@ -60,6 +60,8 @@ from invenio_rdm_records.notifications.builders import (
     GuestAccessRequestSubmitNotificationBuilder,
     GuestAccessRequestSubmittedNotificationBuilder,
     GuestAccessRequestTokenCreateNotificationBuilder,
+    RecordDeletionAcceptNotificationBuilder,
+    RecordDeletionDeclineNotificationBuilder,
     UserAccessRequestAcceptNotificationBuilder,
     UserAccessRequestCancelNotificationBuilder,
     UserAccessRequestDeclineNotificationBuilder,
@@ -87,6 +89,7 @@ from invenio_requests.notifications.builders import (
     CommentRequestEventCreateNotificationBuilder,
 )
 from invenio_requests.resources.requests.config import request_error_handlers
+from invenio_requests.services.requests import facets
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_file_unique_id
 from invenio_stats.processors import (
@@ -491,6 +494,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "invenio_sitemap.tasks.update_sitemap_cache",
         "schedule": crontab(minute=0, hour=2),
     },
+    "update-collections-size": {
+        "task": "invenio_collections.tasks.update_collections_size",
+        "schedule": timedelta(hours=1),
+    },
 }
 """Scheduled tasks configuration (aka cronjobs)."""
 
@@ -818,7 +825,7 @@ APP_RDM_RECORD_EXPORTERS = {
     "json-ld": {
         "name": _("JSON-LD"),
         "serializer": (
-            "invenio_rdm_records.resources.serializers:" "SchemaorgJSONLDSerializer"
+            "invenio_rdm_records.resources.serializers:SchemaorgJSONLDSerializer"
         ),
         "content-type": "application/ld+json",
         "filename": "{id}.json",
@@ -866,7 +873,7 @@ APP_RDM_RECORD_EXPORTERS = {
     },
     "bibtex": {
         "name": _("BibTeX"),
-        "serializer": ("invenio_rdm_records.resources.serializers:" "BibtexSerializer"),
+        "serializer": ("invenio_rdm_records.resources.serializers:BibtexSerializer"),
         "params": {},
         "content-type": "application/x-bibtex",
         "filename": "{id}.bib",
@@ -899,6 +906,13 @@ APP_RDM_RECORD_EXPORTERS = {
         "content-type": "application/x-yaml",
         "filename": "{id}.yaml",
     },
+    "datapackage": {
+        "name": _("Data Package JSON"),
+        "serializer": "invenio_rdm_records.resources.serializers:DataPackageSerializer",
+        "params": {},
+        "content-type": "application/ld+json",
+        "filename": "{id}.json",
+    },
 }
 
 APP_RDM_RECORD_LANDING_PAGE_EXTERNAL_LINKS = []
@@ -923,6 +937,13 @@ def github_link_render(record):
 """
 
 APP_RDM_RECORDS_EXPORT_URL = "/records/<pid_value>/export/<export_format>"
+
+APP_RDM_DEPOSIT_NG_FILES_UI_ENABLED = False
+"""
+Feature toggle to enable the next-generation (NG) file uploader UI in the deposit form.
+
+When enabled, the deposit form will use the new Uppy.io-based file uploader, replacing the current file upload interface.
+"""
 
 APP_RDM_DEPOSIT_FORM_DEFAULTS = {
     "publication_date": lambda: datetime.now().strftime("%Y-%m-%d"),
@@ -1076,7 +1097,7 @@ RDM_SEARCH_USER_COMMUNITIES = {
 
 RDM_SEARCH_USER_REQUESTS = {
     "facets": ["type", "status"],
-    "sort": ["bestmatch", "newest", "oldest"],
+    "sort": ["bestmatch", "newest", "oldest", "newestactivity", "oldestactivity"],
 }
 """User requests search configuration (i.e list of user requests)"""
 
@@ -1165,6 +1186,7 @@ PAGES_DEFAULT_TEMPLATE = "invenio_app_rdm/default_static_page.html"
 
 PAGES_TEMPLATES = [
     ("invenio_app_rdm/default_static_page.html", "Default"),
+    ("invenio_communities/default_static_page.html", "Community"),
 ]
 """List of available templates for pages."""
 
@@ -1407,6 +1429,9 @@ NOTIFICATIONS_BUILDERS = {
     community_notifications.SubComInvitationAccept.type: community_notifications.SubComInvitationAccept,
     community_notifications.SubComInvitationDecline.type: community_notifications.SubComInvitationDecline,
     community_notifications.SubComInvitationExpire.type: community_notifications.SubComInvitationExpire,
+    # Record deletion
+    RecordDeletionAcceptNotificationBuilder.type: RecordDeletionAcceptNotificationBuilder,
+    RecordDeletionDeclineNotificationBuilder.type: RecordDeletionDeclineNotificationBuilder,
 }
 """Notification builders."""
 
@@ -1484,7 +1509,6 @@ ADMINISTRATION_THEME_BASE_TEMPLATE = "invenio_app_rdm/administration_page.html"
 APP_RDM_SUBCOMMUNITIES_LABEL = "Subcommunities"
 """Label for the subcommunities in the community browse page."""
 
-
 RDM_DETAIL_SIDE_BAR_MANAGE_ATTRIBUTES_EXTENSION_TEMPLATE = None
 """Side bar manage attributes extension template."""
 
@@ -1495,3 +1519,48 @@ SITEMAP_SECTIONS = [
     SitemapSectionOfRDMRecords(),
     SitemapSectionOfCommunities(),
 ]
+
+
+# Moderation requests search configuration
+# ========================================
+APP_RDM_MODERATION_REQUEST_SEARCH = {
+    "facets": ["status", "is_open"],
+    "sort": ["bestmatch", "newest", "oldest", "newestactivity", "oldestactivity"],
+}
+"""Moderation requests search configuration."""
+
+APP_RDM_MODERATION_REQUEST_SORT_OPTIONS = {
+    "bestmatch": dict(
+        title=_("Best match"),
+        fields=["_score"],
+    ),
+    "newest": dict(
+        title=_("Newest"),
+        fields=["-created"],
+    ),
+    "oldest": dict(
+        title=_("Oldest"),
+        fields=["created"],
+    ),
+    "newestactivity": dict(
+        title=_("Newest activity"),
+        fields=["-last_activity_at"],
+    ),
+    "oldestactivity": dict(
+        title=_("Oldest activity"),
+        fields=["last_activity_at"],
+    ),
+}
+"""Definitions of available record sort options."""
+
+
+APP_RDM_MODERATION_REQUEST_FACETS = {
+    "status": {
+        "facet": facets.status,
+        "ui": {
+            "field": "status",
+        },
+    },
+    "is_open": {"facet": facets.is_open, "ui": {"field": "is_open"}},
+}
+"""Available facets defined for this module."""

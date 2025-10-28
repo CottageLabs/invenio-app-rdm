@@ -11,9 +11,10 @@
 
 from flask import current_app, g, render_template
 from flask_login import current_user, login_required
+from invenio_checks.api import ChecksAPI
 from invenio_communities.config import COMMUNITIES_ROLES
 from invenio_communities.members.services.request import CommunityInvitation
-from invenio_communities.proxies import current_communities, current_identities_cache
+from invenio_communities.proxies import current_identities_cache
 from invenio_communities.subcommunities.services.request import (
     SubCommunityInvitationRequest,
     SubCommunityRequest,
@@ -21,17 +22,20 @@ from invenio_communities.subcommunities.services.request import (
 from invenio_communities.utils import identity_cache_key
 from invenio_communities.views.communities import render_community_theme_template
 from invenio_communities.views.decorators import pass_community
+from invenio_i18n.ext import current_i18n
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_rdm_records.proxies import current_rdm_records_service
 from invenio_rdm_records.requests import CommunityInclusion, CommunitySubmission
 from invenio_rdm_records.resources.serializers import UIJSONSerializer
+from invenio_rdm_records.services.errors import RecordDeletedException
 from invenio_rdm_records.services.generators import CommunityInclusionNeed
 from invenio_records_resources.services.errors import PermissionDeniedError
 from invenio_requests.customizations import AcceptAction
 from invenio_requests.resolvers.registry import ResolverRegistry
 from invenio_requests.views.decorators import pass_request
 from invenio_users_resources.proxies import current_user_resources
-from sqlalchemy import case
+from invenio_vocabularies.proxies import current_service as vocabulary_service
+from marshmallow_utils.fields.babel import gettext_from_dict
 from sqlalchemy.orm.exc import NoResultFound
 
 from ...records_ui.utils import get_external_resources
@@ -53,10 +57,9 @@ def _resolve_topic_record(request):
     user_owns_request = str(creator_id) == str(current_user.id)
 
     if request["is_closed"] and not user_owns_request:
-        return dict(permissions={}, record_ui=None, record=None, record_uuid=None)
+        return dict(permissions={}, record_ui=None, record=None)
 
     record = None
-    record_uuid = None
     # parse the topic field to get the draft/record pid `record:abcd-efgh`
     entity = ResolverRegistry.resolve_entity_proxy(request["topic"])
     pid = entity._parse_ref_dict_id()
@@ -85,16 +88,12 @@ def _resolve_topic_record(request):
                     break
             # read published record
             record = current_rdm_records_service.read(g.identity, pid, expand=True)
-            record_uuid = current_rdm_records_service.record_cls.pid.resolve(pid).id
         else:
             # read draft
             record = current_rdm_records_service.read_draft(
                 g.identity, pid, expand=True
             )
-            record_uuid = current_rdm_records_service.draft_cls.pid.resolve(
-                pid, registered_only=False
-            ).id
-    except (NoResultFound, PIDDoesNotExistError):
+    except (NoResultFound, PIDDoesNotExistError, RecordDeletedException):
         # We catch PIDDoesNotExistError because a published record with
         # a soft-deleted draft will raise this error. The lines below
         # will catch the case that a id does not exists and raise a
@@ -103,8 +102,7 @@ def _resolve_topic_record(request):
         try:
             # read published record
             record = current_rdm_records_service.read(g.identity, pid, expand=True)
-            record_uuid = current_rdm_records_service.record_cls.pid.resolve(pid).id
-        except NoResultFound:
+        except (NoResultFound, RecordDeletedException):
             # record tab not displayed when the record is not found
             # the request is probably not open anymore
             pass
@@ -126,10 +124,9 @@ def _resolve_topic_record(request):
             permissions=permissions,
             record_ui=record_ui,
             record=record,
-            record_uuid=record_uuid,
         )
 
-    return dict(permissions={}, record_ui=None, record=None, record_uuid=None)
+    return dict(permissions={}, record_ui=None, record=None)
 
 
 def _resolve_record_or_draft_files(record, request):
@@ -174,72 +171,6 @@ def _resolve_record_or_draft_media_files(record, request):
     return None
 
 
-def _resolve_checks(record_uuid, request, community=None):
-    """Resolve the checks for this draft/record related to the community and the request."""
-    # FIXME: Move this logic to invenio-checks
-
-    # Early exit if checks are not enabled.
-    enabled = current_app.config.get("CHECKS_ENABLED", False)
-
-    if not enabled:
-        return None
-
-    # Early exit if not draft submission nor record inclusion
-    request_type = request["type"]
-    is_draft_submission = request_type == CommunitySubmission.type_id
-    is_record_inclusion = request_type == CommunityInclusion.type_id
-
-    if not is_draft_submission and not is_record_inclusion:
-        return None
-
-    # Early exit if there is no record UUID (for instance for some closed requests)
-    if not record_uuid:
-        return None
-
-    # Resolve the target community from the request if the community was not passed as an argument
-    if not community:
-        community_uuid = request["receiver"]["community"]
-        community = current_communities.service.read(
-            id_=community_uuid, identity=g.identity
-        )
-
-    # Collect the community UUID and the potential parent community UUID
-    communities = []
-    community_parent_id = community.to_dict().get("parent", {}).get("id")
-    if community_parent_id:
-        # Add the parent community first for later ordering of check configs
-        communities.append(community_parent_id)
-    communities.append(community.id)
-
-    # Early exit if no check config found for the communities
-    from invenio_checks.models import CheckConfig, CheckRun
-
-    check_configs = (
-        CheckConfig.query.filter(CheckConfig.community_id.in_(communities))
-        .order_by(
-            # Order by the communities (parent first if any) and then by check IDs for deterministic ordering
-            case((CheckConfig.community_id == communities[0], 0), else_=1),
-            CheckConfig.check_id,
-        )
-        .all()
-    )
-
-    if not check_configs:
-        return None
-
-    # Find check runs for the given check configs
-    check_config_ids = [check_config.id for check_config in check_configs]
-    checks = CheckRun.query.filter(
-        CheckRun.config_id.in_(check_config_ids),
-        CheckRun.record_id == record_uuid,
-    ).all()
-    # For a given record, there is one check run corresponding to one check config
-    # Order the check runs by the same order as the check configs for deterministic ordering
-    checks = sorted(checks, key=lambda check: check_config_ids.index(check.config_id))
-
-    return checks
-
-
 @login_required
 @pass_request(expand=True)
 def user_dashboard_request_view(request, **kwargs):
@@ -254,27 +185,51 @@ def user_dashboard_request_view(request, **kwargs):
     has_topic = request["topic"] is not None
     has_record_topic = has_topic and "record" in request["topic"]
     has_community_topic = has_topic and "community" in request["topic"]
+    is_record_inclusion = request_type == CommunityInclusion.type_id
+    request_permissions = request.has_permissions_to(["action_accept"])
 
     if has_record_topic:
         topic = _resolve_topic_record(request)
         record_ui = topic["record_ui"]
         record = topic["record"]
-        record_uuid = topic["record_uuid"]
         is_draft = record_ui["is_draft"] if record_ui else False
-        checks = _resolve_checks(record_uuid, request)
+        is_published = record_ui["is_published"] if record_ui else False
+        has_draft = record._record.has_draft if record else False
 
         files = _resolve_record_or_draft_files(record_ui, request)
         media_files = _resolve_record_or_draft_media_files(record_ui, request)
+
+        checks = None
+        if current_app.config.get("CHECKS_ENABLED", False) and record:
+            if is_record_inclusion and has_draft:
+                checks = ChecksAPI.get_runs(record._record, is_draft=True)
+            else:
+                checks = ChecksAPI.get_runs(record._record)
+
+        if request_type == "record-deletion":
+            reason_title = vocabulary_service.read(
+                g.identity,
+                ("removalreasons", request["payload"]["reason"]),
+            ).to_dict()
+            request["payload"]["reason_label"] = gettext_from_dict(
+                reason_title["title"],
+                current_i18n.locale,
+                current_app.config.get("BABEL_DEFAULT_LOCALE", "en"),
+            )
+
         return render_template(
             f"invenio_requests/{request_type}/index.html",
             base_template="invenio_app_rdm/users/base.html",
             user_avatar=avatar,
             invenio_request=request.to_dict(),
-            record=record_ui,
+            record_ui=record_ui,
+            record=record,
             checks=checks,
-            permissions=topic["permissions"],
+            permissions={**topic["permissions"], **request_permissions},
             is_preview=is_draft,  # preview only when draft
             is_draft=is_draft,
+            is_published=is_published,
+            has_draft=has_draft,
             request_is_accepted=request_is_accepted,
             files=files,
             media_files=media_files,
@@ -292,7 +247,7 @@ def user_dashboard_request_view(request, **kwargs):
             user_avatar=avatar,
             invenio_request=request.to_dict(),
             request_is_accepted=request_is_accepted,
-            permissions={},
+            permissions={**request_permissions},
             include_deleted=False,
         )
 
@@ -303,8 +258,9 @@ def user_dashboard_request_view(request, **kwargs):
         f"invenio_requests/{request_type}/index.html",
         base_template="invenio_app_rdm/users/base.html",
         user_avatar=avatar,
-        record=record_ui,
-        permissions=topic["permissions"],
+        record=record,
+        record_ui=record_ui,
+        permissions={**topic["permissions"], **request_permissions},
         invenio_request=request.to_dict(),
         request_is_accepted=request_is_accepted,
         include_deleted=False,
@@ -334,30 +290,44 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
     permissions = community.has_permissions_to(
         ["update", "read", "search_requests", "search_invites", "submit_record"]
     )
+    request_permissions = request.has_permissions_to(["action_accept"])
+    # Add request specific permissions so that reviewers can be selected from community curators
+    permissions.update(request_permissions)
 
     if is_draft_submission or is_record_inclusion:
         topic = _resolve_topic_record(request)
         record_ui = topic["record_ui"]
         record = topic["record"]
-        record_uuid = topic["record_uuid"]
         is_draft = record_ui["is_draft"] if record_ui else False
-        checks = _resolve_checks(record_uuid, request, community)
-
+        is_published = record_ui["is_published"] if record_ui else False
+        has_draft = record._record.has_draft if record else False
         permissions.update(topic["permissions"])
+
         files = _resolve_record_or_draft_files(record_ui, request)
         media_files = _resolve_record_or_draft_media_files(record_ui, request)
+
+        checks = None
+        if current_app.config.get("CHECKS_ENABLED", False) and record:
+            if is_record_inclusion and has_draft:
+                checks = ChecksAPI.get_runs(record._record, is_draft=True)
+            else:
+                checks = ChecksAPI.get_runs(record._record)
+
         return render_community_theme_template(
             f"invenio_requests/{request_type}/index.html",
             theme=community.to_dict().get("theme", {}),
             base_template="invenio_communities/details/base.html",
             invenio_request=request.to_dict(),
-            record=record_ui,
+            record=record,
+            record_ui=record_ui,
             community=community,
             community_ui=community_ui,
             checks=checks,
             permissions=permissions,
             is_preview=is_draft,  # preview only when draft
             is_draft=is_draft,
+            has_draft=has_draft,
+            is_published=is_published,
             request_is_accepted=request_is_accepted,
             files=files,
             media_files=media_files,

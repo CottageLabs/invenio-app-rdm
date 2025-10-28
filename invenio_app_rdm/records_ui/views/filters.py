@@ -123,9 +123,16 @@ def order_entries(files):
 
 def get_scheme_label(scheme):
     """Convert backend scheme to frontend label."""
-    scheme_to_label = current_app.config.get("RDM_RECORDS_IDENTIFIERS_SCHEMES", {})
+    configs = [
+        current_app.config.get("RDM_RECORDS_IDENTIFIERS_SCHEMES", {}),
+        current_app.config.get("RDM_RECORDS_RELATED_IDENTIFIERS_SCHEMES", {}),
+    ]
 
-    return scheme_to_label.get(scheme, {}).get("label", scheme)
+    for cfg in configs:
+        if scheme in cfg:
+            return cfg[scheme].get("label", scheme)
+
+    return scheme
 
 
 def localize_number(value):
@@ -187,12 +194,19 @@ def custom_fields_search(field, field_value, field_cfg=None):
         # the \ is necessary for the lucene syntax but produces a SyntaxWarning.
         # The r marks the string as raw and prevents the warning
         # https://docs.python.org/3/reference/lexical_analysis.html#escape-sequences
-        namespace_string = r"\:".join(namespace_array) + f".{localised_title}.{locale}"
+        namespace_string = r"\:".join(namespace_array) + rf".{localised_title}.{locale}"
     else:
         namespace_string = r"\:".join(namespace_array)
+        # Check if the field config has a landing page search attribute to search by
+        landing_page_search_attr = (field_cfg or {}).get(
+            "landing_page_search_attr", False
+        )
+        if landing_page_search_attr:
+            namespace_string += rf".{landing_page_search_attr}"
 
     return url_for(
-        "invenio_search_ui.search", q=f"custom_fields.{namespace_string}:{field_value}"
+        "invenio_search_ui.search",
+        q=f'custom_fields.{namespace_string}:"{field_value}"',
     )
 
 
@@ -207,6 +221,6 @@ def transform_record(record, serializer, module=None, throws=True, **kwargs):
         if throws:
             raise Exception("No serializer found.")
     except Exception:
-        current_app.logger.error("Record transformation failed.")
+        current_app.logger.exception("Record transformation failed.")
         if throws:
             raise

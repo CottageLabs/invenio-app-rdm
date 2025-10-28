@@ -1,8 +1,8 @@
 ..
-    Copyright (C) 2019-2024 CERN.
+    Copyright (C) 2019-2025 CERN.
     Copyright (C) 2019-2024 Northwestern University.
     Copyright (C) 2021-2024 TU Wien.
-    Copyright (C) 2021-2024 Graz University of Technology.
+    Copyright (C) 2021-2025 Graz University of Technology.
 
     Invenio App RDM is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
@@ -10,7 +10,135 @@
 Changes
 =======
 
-Versino v13.0.0b3.dev16 (released 2025-05-23)
+Version v14.0.0b2.dev2 (released 2025-10-24)
+
+- upgrade_scripts: v14: optimize scan to avoid scroll context overhead
+
+Version v14.0.0b2.dev1 (released 2025-10-21)
+
+- deposit-form: updated related works options vocab
+
+Version v14.0.0b2.dev0 (released 2025-10-21)
+
+- installation: bump invenio-rdm-records
+- upgrade_scripts: Add v13 to v14 migration script
+- ui: add new related identifiers to vocabulary
+- ui: format numbers in CompactStats
+- fix(macros): Fix custom fields vocabularies links on landing page
+- fix(admin): use configured base template instead of hard-coded value
+
+Version v14.0.0b1.dev5 (released 2025-10-14)
+
+- fix(community-submission): add missing var in side bar template
+- fix(guest-access-request): handle broken expiration date payload value
+    * this extra check prevents the request timeline UI from breaking when a
+      request payload has a broken value, to make recovery easier
+    * also, make eslint happy with a camel case variable name
+- fix(guest-access-request): handle more possible expiration date values
+    * when the expiration date gets submitted, the value of the empty input
+      field is typically the empty string rather than `null`
+    * on the reading side, handle the case that the expiration date is set
+      as a string value (since request payloads are generally strings)
+
+Version v14.0.0b1.dev4 (released 2025-10-03)
+
+- installation: relax invenio-collections dependency requirements
+    * see https://github.com/inveniosoftware/invenio-app-rdm/issues/3194
+
+Version v14.0.0b1.dev3 (released 2025-10-01)
+
+- fix(deposit-ui): read expanded published record
+    * The UI serializer requires the expanded record service result.
+- feat(config): add last activity sort option
+
+Version v14.0.0b1.dev2 (released 2025-09-29)
+
+- fix(deposit-ui): use API record for evaluating deletion policy
+
+Version v14.0.0b1.dev1 (released 2025-09-24)
+
+- Fixed CHANGES.rst formatting
+
+Version v14.0.0b1.dev0 (released 2025-09-24)
+
+- feat(administration): add Requests view
+- feat: add record deletion requests
+    * Allows to configure record deletion policies for immediate deletion
+      or going through a request flow on the record landing page.
+
+Version v14.0.0b0.dev4 (released 2025-09-01)
+
+- views(deposit): pass to the form config the published record if we edit one
+    * The published record is used to compare published DOI but it can be
+      used also to compare with the published state of an editing draft.
+- help: correct search instructions for missing fields
+
+Version v14.0.0b0.dev3 (released 2025-08-26)
+
+- fix(community-requests): request permissions were missing from UI
+    * The community requests page was not showing the request reviewers section
+      because the permissions were not passed to the template.
+
+Version v14.0.0b0.dev2 (released 2025-08-08)
+
+- fix(views): use correct community value
+    * After the change in 33f1b0d2, values passed to the UI or used for
+      accessing UI-related attributes (e.g. the "theme"), must come from
+      the community UI-serialized value instead of the service result item.
+- fix(pages): add community base template as a valid option
+- feat(fixtures): allow specifying `template_name` in page fixtures
+- ui: refactor record injecting in JS components
+    - inject only record links in citations cmps
+    - remove dependency between citations and communities cmps which
+      they were sharing the same record injection
+- fix(deposits): pass missing community_ui to community theme templates
+    * also introduce more explicit distinctions between community and
+      community_ui variables
+- UI: set order of entries and rename category to deposits
+- UI: make external resources section consistent with details
+- UI: make rights section consistent with details
+
+Version v14.0.0b0.dev1 (released 2025-08-01)
+
+- setup: bump invenio-communities and invenio-rdm-records
+- theme: add search overrides for reviewers search results
+- requests: add request action_accept permissions to UI
+- theme: update package-lock.json for compiling catalog for frontend tests
+
+Version v13.0.0b4.dev2 (released 2025-06-13)
+
+- checks: integrate into community requests flow
+- deposit-ui: pass draft errors to form
+- landing page: text-break references
+- ui: fixed caret trigger in stats
+
+- deposit: report actual file quota rather than configured values
+    * previously, the deposit form would show values from the configuration
+      that might be different from the actually effective quota
+
+
+Version v13.0.0b4.dev1 (released 2025-06-10)
+
+- communities-ui: pass locale language when rendering static pages
+- deposit UI: add overridable hook for a separate section
+
+Version v13.0.0b4.dev0 (released 2025-06-04)
+
+- setup: bump major dependencies
+- change: add internationalized page creation
+- details: pass scheme on related identifiers url generator
+
+Version v13.0.0b3.dev18 (released 2025-06-02)
+
+- installation: add collections dependency
+- views: rename record_ui correctly
+
+Version v13.0.0b3.dev17 (released 2025-06-02)
+
+- Move collections implementaiton to Invenio-Collections
+- Integrate Invenio-Sitemap
+
+Version v13.0.0b3.dev16 (released 2025-05-23)
 
 - administration: audit_logs: Add View Changes and View Log button and modals
 
