@@ -3,12 +3,27 @@
     Copyright (C) 2019-2024 Northwestern University.
     Copyright (C) 2021-2024 TU Wien.
     Copyright (C) 2021-2025 Graz University of Technology.
+    Copyright (C) 2025 KTH Royal Institute of Technology.
 
     Invenio App RDM is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version v13.0.5 (released 2025-10-21)
+
+- i18n: pulled translations
+
+Version v13.0.4 (released 2025-10-16)
+
+- guest access requests: handle values in JS that appear in use but were not handled correctly before
+- admin: use configured base template for administration panel instead of hard-coded value
+
+Version v13.0.3 (released 2025-09-25)
+
+- help: correct search instructions for missing fields
+- deposit: pass to the form config the published record if we edit one
 
 Version v13.0.2 (released 2025-08-25)
 
