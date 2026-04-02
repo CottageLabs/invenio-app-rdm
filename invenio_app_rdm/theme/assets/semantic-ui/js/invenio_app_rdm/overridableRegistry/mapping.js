@@ -1,0 +1,1 @@
+/home/richard/Dropbox/Code/invenio-demo/assets/js/invenio_app_rdm/overridableRegistry/mapping.js
