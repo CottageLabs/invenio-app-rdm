@@ -1,5 +1,5 @@
 {#
-  Copyright (C) 2021 CERN.
+  Copyright (C) 2021-2025 CERN.
   Copyright (C) 2023 TU Wien.
 
   Invenio App RDM is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
 {%- endif %}
 
 {%- block message %}
-<div class="container centered rel-pt-2">
+<div class="ui container max-w-3/5 centered rel-pt-2">
   <h1 class="ui header inline-block">
     <i class="icon lightning" aria-hidden="true"></i>
     <div class="content pl-0 rel-pr-1">
@@ -37,6 +37,11 @@
       <p>
         <strong>{{ _("Removed by:") }}</strong> {{ record.ui.tombstone.removed_by }}
       </p>
+      {%- if record.ui.tombstone.deletion_policy %}
+      <p>
+        <strong>{{ _("Deletion Policy:") }}</strong> {{ record.ui.tombstone.deletion_policy }}
+      </p>
+      {%- endif %}
       {%- if record.ui.tombstone.note %}
       <p>
         <strong>{{ _("Removal note:") }}</strong> {{ record.ui.tombstone.note }}

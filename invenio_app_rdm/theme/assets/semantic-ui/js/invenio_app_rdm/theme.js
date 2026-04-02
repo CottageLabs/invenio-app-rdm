@@ -145,12 +145,13 @@ $authButton.on({ click: handleAuthButtonClick });
 const invenioConfig = JSON.parse(document.body.dataset.invenioConfig);
 const isMathJaxEnabled = invenioConfig?.isMathJaxEnabled;
 if (window.invenio) {
-  window.invenio.onSearchResultsRendered = async () => {
+  window.invenio.onSearchResultsRendered = async (elements) => {
     if (isMathJaxEnabled) {
       // Re-render mathematical content on the page using MathJax.
       // The promise is required to make sure that MathJax is fully loaded before
       // typesetting, and potentially autoloading extra extensions.
-      await window.MathJax.typesetPromise();
+      // Only render the list of elements that are provided, otherwise render all elements (when undefined).
+      await window.MathJax.typesetPromise(elements);
     }
   };
 }
@@ -161,4 +162,13 @@ document.querySelectorAll(".copy-doi-button").forEach((element) => {
     <CopyButton text={element.dataset.value} size={element.dataset.size} />,
     element
   );
+});
+
+$("#record-tab").on("click", function () {
+  // Since we use hidden for record-tab-panel in the request details template, the previewer has
+  // zero width and zero height and it's failing initialization. So we need to reload the iframe.
+  const iframe = document.getElementById("preview-iframe");
+  if (iframe) {
+    iframe.contentWindow.location.reload();
+  }
 });

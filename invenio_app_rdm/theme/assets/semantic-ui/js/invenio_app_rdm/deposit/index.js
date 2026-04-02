@@ -1,5 +1,5 @@
 // This file is part of InvenioRDM
-// Copyright (C) 2020-2024 CERN.
+// Copyright (C) 2020-2025 CERN.
 // Copyright (C) 2020-2022 Northwestern University.
 // Copyright (C) 2022-2024 KTH Royal Institute of Technology.
 //
@@ -28,6 +28,8 @@ ReactDOM.render(
         "deposits-record-restriction-grace-period"
       )}
       allowRecordRestriction={getInputFromDOM("deposits-allow-record-restriction")}
+      recordDeletion={getInputFromDOM("deposits-record-deletion")}
+      fileModification={getInputFromDOM("deposits-file-modification")}
       groupsEnabled={getInputFromDOM("config-groups-enabled")}
       allowEmptyFiles={getInputFromDOM("records-resources-allow-empty-files")}
       isDoiRequired={getInputFromDOM("deposits-is-doi-required")}

@@ -37,7 +37,11 @@ from invenio_vocabularies.records.models import VocabularyScheme
 from marshmallow_utils.fields.babel import gettext_from_dict
 from sqlalchemy.orm import load_only
 
-from ..utils import set_default_value
+from ..utils import (
+    evaluate_file_modification,
+    evaluate_record_deletion,
+    set_default_value,
+)
 from .decorators import (
     no_cache_response,
     pass_draft,
@@ -207,10 +211,13 @@ class VocabulariesOptions:
             for hit in subset_resource_types.to_dict()["hits"]["hits"]
         ]
 
-    def _dump_vocabulary_w_basic_fields(self, vocabulary_type):
+    def _dump_vocabulary_w_basic_fields(self, vocabulary_type, extra_filter=None):
         """Dump vocabulary with id and title field."""
         results = vocabulary_service.read_all(
-            g.identity, fields=["id", "title"], type=vocabulary_type
+            g.identity,
+            fields=["id", "title"],
+            type=vocabulary_type,
+            extra_filter=extra_filter,
         )
         return [
             {
@@ -285,23 +292,39 @@ class VocabulariesOptions:
         """Dump linkable resource type vocabulary."""
         return self._resource_types(dsl.Q("term", tags="linkable"))
 
-    def identifier_schemes(self):
-        """Dump identifiers scheme (fake) vocabulary.
-
-        "Fake" because identifiers scheme is not a vocabulary.
-        """
+    def _dump_identifier_schemes(self, config_key):
+        """Dump identifier schemes from a given config key."""
         return [
             {"text": get_scheme_label(scheme), "value": scheme}
-            for scheme in current_app.config.get("RDM_RECORDS_IDENTIFIERS_SCHEMES", {})
+            for scheme in current_app.config.get(config_key, {})
         ]
 
-    def identifiers(self):
-        """Dump related identifiers vocabulary."""
-        self._vocabularies["identifiers"] = {
+    def _dump_identifiers(self, vocab_key, config_key):
+        """Dump identifiers vocabulary for a given vocab/config key pair."""
+        self._vocabularies[vocab_key] = {
             "relations": self.relation_types(),
             "resource_type": self.linkable_resource_types(),
-            "scheme": self.identifier_schemes(),
+            "scheme": self._dump_identifier_schemes(config_key),
         }
+
+    def identifiers(self):
+        """Dump identifiers vocabulary."""
+        self._dump_identifiers("identifiers", "RDM_RECORDS_IDENTIFIERS_SCHEMES")
+
+    def related_identifiers(self):
+        """Dump related identifiers vocabulary."""
+        self._dump_identifiers(
+            "related_identifiers", "RDM_RECORDS_RELATED_IDENTIFIERS_SCHEMES"
+        )
+
+    def deletion_request_removal_reasons(self):
+        """Dump deletion request removal reasons vocabulary."""
+        self._vocabularies["deletion_request_removal_reasons"] = (
+            self._dump_vocabulary_w_basic_fields(
+                "removalreasons", extra_filter=dsl.Q("term", tags="deletion-request")
+            )
+        )
+        return self._vocabularies["deletion_request_removal_reasons"]
 
     def dump(self):
         """Dump into dict."""
@@ -314,6 +337,8 @@ class VocabulariesOptions:
         self.contributor_roles()
         self.subjects()
         self.identifiers()
+        self.related_identifiers()
+        self.deletion_request_removal_reasons()
         # We removed
         # vocabularies["relation_type"] = _dump_relation_types_vocabulary()
         return self._vocabularies
@@ -335,6 +360,8 @@ def load_custom_fields():
             # for each custom field. This is the label shown at the top of the upload
             # form
             field_error_label = field.get("props", {}).get("label")
+            # Add the field ID to the props to allow overriding the React widgets of custom fields
+            field["props"]["id"] = field["field"]
             if field_error_label:
                 error_labels[f"custom_fields.{field['field']}"] = field_error_label
             if getattr(field_instance, "relation_cls", None):
@@ -522,10 +549,21 @@ def deposit_edit(pid_value, draft=None, draft_files=None, files_locked=True):
     record = ui_serializer.dump_obj(draft.to_dict())
 
     published_record = None
-    # if editing draft of a published record
-    if record.get("status") == "published":
-        _record = service.read(g.identity, id_=record["id"]).to_dict()
-        published_record = ui_serializer.dump_obj(_record)
+    if record["is_published"]:
+        published_record_result = service.read(
+            g.identity, id_=record["id"], expand=True
+        )
+        published_record = ui_serializer.dump_obj(published_record_result.to_dict())
+
+        record_deletion = evaluate_record_deletion(
+            published_record_result._record, g.identity
+        )
+        file_modification = evaluate_file_modification(
+            published_record_result._record, g.identity
+        )
+    else:
+        record_deletion = {}
+        file_modification = {}
 
     community_ui = None
     community_theme = None
@@ -600,6 +638,8 @@ def deposit_edit(pid_value, draft=None, draft_files=None, files_locked=True):
                 "manage_record_access",
             ]
         ),
+        record_deletion=record_deletion,
+        file_modification=file_modification,
     )
 
 

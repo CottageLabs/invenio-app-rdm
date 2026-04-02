@@ -1,9 +1,8 @@
 ..
-    Copyright (C) 2019-2024 CERN.
+    Copyright (C) 2019-2025 CERN.
     Copyright (C) 2019-2024 Northwestern University.
     Copyright (C) 2021-2024 TU Wien.
-    Copyright (C) 2021-2025 Graz University of Technology.
-    Copyright (C) 2025 KTH Royal Institute of Technology.
+    Copyright (C) 2021-2026 Graz University of Technology.
 
     Invenio App RDM is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
@@ -11,143 +10,271 @@
 Changes
 =======
 
-Version v13.0.5 (released 2025-10-21)
+Version v14.0.0b9.dev0 (released 2026-03-20)
 
-- i18n: pulled translations
+- change(setup): upgrade invenio-checks to fix empty alembic revision
 
-Version v13.0.4 (released 2025-10-16)
+Version v14.0.0b8.dev0 (released 2026-03-20)
 
-- guest access requests: handle values in JS that appear in use but were not handled correctly before
-- admin: use configured base template for administration panel instead of hard-coded value
+- combined b6,b7 (yanked) releases, fixed invenio-jobs alembic branches
+- macros: fix vocabulary custom field search value on landing page
+- breaking change(setup): upgrade invenio packagea
+                          requires alembic upgrade and mappings upgrades
+- feat: add remove_community_from_record permission check
+- fix(ui): group publishing information fields into Journal/Imprint/Thesis sections
 
-Version v13.0.3 (released 2025-09-25)
 
+Version v14.0.0b7.dev1 (released 2026-03-19)
+
+- macros: fix vocabulary custom field search value on landing page
+
+Version v14.0.0b7.dev0 (released 2026-03-10)
+
+- breaking change(setup): upgrade invenio packagea
+                          requires alembic upgrade and mappings upgrades
+- feat: add remove_community_from_record permission check
+- fix(ui): group publishing information fields into Journal/Imprint/Thesis sections
+
+
+Version v14.0.0b6.dev0 (released 2026-03-10)
+
+- breaking change(setup): upgrade invenio packagea
+                          requires alembic upgrade and mappings upgrades
+
+Version v14.0.0b5.dev6 (released 2026-03-03)
+
+- fix(requests): reload preview iframe when opening record tab
+- fix(ui): change padding for children facets in accordion
+- fix(ui): use preset variable to set icon height
+- chore(deps-dev): bump minimatch
+
+Version v14.0.0b5.dev5 (released 2026-02-27)
+
+- fix(record-detail): render access status as safe HTML
+- fix: add record files restriction option to enable cache-control header
+- fix(pending-communities): use self_html link instead of adding /me manually
+- chore(deps-dev): bump lodash
+- fix(config): remove value for the deprecated WSGI_PROXIES variable
+
+Version v14.0.0b5.dev4 (released 2026-02-23)
+
+- fix(db): use UTC for Postgres
+- feat(style): aria-disabled button
+- fix: limit max width of community logo
+- fix(administration-user-access): user permission based ACL
+- feat(comment-file): limit display width of user uploaded images
+- fix(css): allow horizontal scrolling for request comment body
+
+Version v14.0.0b5.dev3 (released 2026-02-17)
+
+- feat(facets): register overriden range facet element as default
+
+Version v14.0.0b5.dev2 (released 2026-02-13)
+
+- fix: show all contributers on dashboard page
+- feat(deposit): allow overriding deposit serializer
+- feat(administration): add user creation
+- feat(deposit): add record to overridable context
+- feat(deposit): add extra and after overridables
+- Improve German translation of search help page
+- help pages: Add German translations for statistics and versioning pages
+- feat(roles): add administration views for role management
+
+Version v14.0.0b5.dev0 (released 2026-02-03)
+
+- fix(chore): DeprecationWarning stdlib
+- chore(setup): bump dependencies
+- fix: manage record link functionality for all versions
+- feat(css): styles for deep-linked request comment replies
+- style: collapsible messages style
+- Fix regex search example URL
+- Fix regex search example
+- search guide: fix regex example in swedish translation
+- search guide: fix regex example
+
+Version v14.0.0b4.dev6 released 2026-01-22)
+
+- fix(ExportDropdown): Fix css spacing and responsiveness
+
+Version v14.0.0b4.dev5 (released 2026-01-21)
+
+- feat(CopyButton): Pass remaining props to customize UI & functionality
+- refactor(RecordVersionsList): Make version items overridable
+
+Version v14.0.0b4.dev4 (released 2026-01-15)
+
+- refactor(ui): support custom file display name resolver
+- fix: use UUID type for request identifiers
+- feat(comment-replies): add single threading on comments
+- fix(moderation.requests): handle empty payload key not in request
+- feat(previewer): show message for outdated records
+
+Version v14.0.0b4.dev3 (released 2025-12-18)
+
+- fix(feed): styling for disabled reply input
+
+Version v14.0.0b4.dev2 (released 2025-12-16)
+
+- semantic-ui: feed.overrides: Add placeholder css
+- fix: css padding for preview msg
+
+Version v14.0.0b4.dev1 (released 2025-12-13)
+
+- feat(css): styles for threaded replies
+- feat(views-request): include `can_reply_comment` in template permissions dict
+
+Version v14.0.0b4.dev0 (released 2025-12-12)
+
+- chore(setup): bump major versions
+- feat: add empty Overridable container before and after the files accordion
+- assets: added css for hidden comment line and last page first comment
+
+Version v14.0.0b3.dev4 (released 2025-12-08)
+
+- fix: ensure that pages render if accessed via secret link
+- UI: change button icon and text
+- chore: drill recordRequests into the modal
+- fix: restrict to only community sub/inc reqs
+- frontend: add direct link to request if user has access
+- feat(css): styles for quote replies
+- fix(requests_ui): Inject lock_request and create_comment permissions
+- fix: correct types
+
+Version v14.0.0b3.dev3 (released 2025-11-21)
+
+- feat(css): request comment deep links
+
+Version v14.0.0b3.dev2 (released 2025-11-21)
+
+- fix: revert mapping.js symlink
+
+Version v14.0.0b3.dev1 (released 2025-11-21)
+
+- UI: add info message about remaining days to publish changes
+- request: add file mod request template
+- fix: set files_locked to `bucket.locked` rather than permission
+    * currently the permission is whether you can unlock the files
+    * but the files are only unlocked when you create the draft
+    * as such as an admin when you edit a published draft, if it was
+      created by a user it will look like the files are unlocked but
+      this is false
+- feat: pass file modification eval to deposit form
+- fix: align selector with semantic-ui
+- fix(views): pass API record to evaluate record deletion
+- fix(record-ui): do not sanitize additional description in template
+- admin: requests details view improvements
+    - Replace `Record deletion` by `Deletion request for "Record name"`
+    - Link showing all requests for a given user
+- tombstone: add deletion policy
+- Update release date for version v14.0.0b3.dev0
+
+Version v14.0.0b3.dev0 (released 2025-11-12)
+
+- setup: bump major version of `invenio-oauthclient`
+
+Version v14.0.0b2.dev4 (released 2025-11-05)
+
+- refactor(config): Update DataCite serializer for schema v4.5
+
+Version v14.0.0b2.dev3 (released 2025-11-04)
+
+- feat(share links): handle optional/required expiration date
+- feat(form): rename creators to authors and help text
+
+Version v14.0.0b2.dev2 (released 2025-10-24)
+
+- upgrade_scripts: v14: optimize scan to avoid scroll context overhead
+
+Version v14.0.0b2.dev1 (released 2025-10-21)
+
+- deposit-form: updated related works options vocab
+
+Version v14.0.0b2.dev0 (released 2025-10-21)
+
+- installation: bump invenio-rdm-records
+- upgrade_scripts: Add v13 to v14 migration script
+- ui: add new related identifiers to vocabulary
+- ui: format numbers in CompactStats
+- fix(macros): Fix custom fields vocabularies links on landing page
+- fix(admin): use configured base template instead of hard-coded value
+
+Version v14.0.0b1.dev5 (released 2025-10-14)
+
+- fix(community-submission): add missing var in side bar template
+- fix(guest-access-request): handle broken expiration date payload value
+    * this extra check prevents the request timeline UI from breaking when a
+      request payload has a broken value, to make recovery easier
+    * also, make eslint happy with a camel case variable name
+- fix(guest-access-request): handle more possible expiration date values
+    * when the expiration date gets submitted, the value of the empty input
+      field is typically the empty string rather than `null`
+    * on the reading side, handle the case that the expiration date is set
+      as a string value (since request payloads are generally strings)
+
+Version v14.0.0b1.dev4 (released 2025-10-03)
+
+- installation: relax invenio-collections dependency requirements
+    * see https://github.com/inveniosoftware/invenio-app-rdm/issues/3194
+
+Version v14.0.0b1.dev3 (released 2025-10-01)
+
+- fix(deposit-ui): read expanded published record
+    * The UI serializer requires the expanded record service result.
+- feat(config): add last activity sort option
+
+Version v14.0.0b1.dev2 (released 2025-09-29)
+
+- fix(deposit-ui): use API record for evaluating deletion policy
+
+Version v14.0.0b1.dev1 (released 2025-09-24)
+
+- Fixed CHANGES.rst formatting
+
+Version v14.0.0b1.dev0 (released 2025-09-24)
+
+- feat(administration): add Requests view
+- feat: add record deletion requests
+    * Allows to configure record deletion policies for immediate deletion
+      or going through a request flow on the record landing page.
+
+Version v14.0.0b0.dev4 (released 2025-09-01)
+
+- views(deposit): pass to the form config the published record if we edit one
+    * The published record is used to compare published DOI but it can be
+      used also to compare with the published state of an editing draft.
 - help: correct search instructions for missing fields
-- deposit: pass to the form config the published record if we edit one
 
-Version v13.0.2 (released 2025-08-25)
+Version v14.0.0b0.dev3 (released 2025-08-26)
 
-- i18n: pulled translations
-- fix(file-list): display fallback message if file checksum is not available
-- feat(upgrade_scripts): add event stats mapping update for v13
-    * Adds the recently added `is_machine` field to the record views and
-      file downloads event stats mappings. Only updates the latest two
-      indices, since they might still be actively receiving/processing
-      events.
-- fix(views): redirect deleted record file downloads
-    * When accessing a file download of a deleted record, return a 302
-      redirect to the record page. This is to make sure that we display the
-      record's "410 Gone" tombstone page response.
-- i18n: wrap search results not found message (#3159)
-    Updated the message displayed when no search results are found to
-    include a localized version of "your search"
+- fix(community-requests): request permissions were missing from UI
+    * The community requests page was not showing the request reviewers section
+      because the permissions were not passed to the template.
+
+Version v14.0.0b0.dev2 (released 2025-08-08)
+
 - fix(views): use correct community value
     * After the change in 33f1b0d2, values passed to the UI or used for
       accessing UI-related attributes (e.g. the "theme"), must come from
       the community UI-serialized value instead of the service result item.
 - fix(pages): add community base template as a valid option
 - feat(fixtures): allow specifying `template_name` in page fixtures
-- fix(v13-migration): update name entries
-- fix(v13-migration): update affiliation entries
+- ui: refactor record injecting in JS components
+    - inject only record links in citations cmps
+    - remove dependency between citations and communities cmps which
+      they were sharing the same record injection
 - fix(deposits): pass missing community_ui to community theme templates
     * also introduce more explicit distinctions between community and
       community_ui variables
+- UI: set order of entries and rename category to deposits
+- UI: make external resources section consistent with details
+- UI: make rights section consistent with details
 
-Version v13.0.1 (released 2025-07-31)
+Version v14.0.0b0.dev1 (released 2025-08-01)
 
-- fix(deposits): update doi default option only if managed
-    * Fix logic for selecting default DOI option in deposit form when creating new versions
-    * Only set managed DOI provider as default when external and not_needed are not in allowed providers
-    * Improves user experience when versioning records with DataCite DOIs
-
-Version v13.0.0 (released 2025-07-23)
-
-- Official release of InvenioRDM v13. Contains all pre-release changes. See
-  [release notes](https://inveniordm.docs.cern.ch/releases/v13/version-v13.0.0/)
-
-Version v13.0.0rc9 (released 2025-07-23)
-
-- fix(migration): wrong variable used
-
-Version v13.0.0rc8 (released 2025-07-23)
-
-- migration: improve text in v13 upgrade script
-
-Version v13.0.0rc7 (released 2025-07-22)
-
-- fix: license due to copy pasting
-- fix: import `overridable-registry.js` in `records_list` macro
-- templates: added default_static_page for communties
-- ui: log serialization exceptions
-
-Version v13.0.0rc6 (released 2025-07-21)
-
-- fix: package.json and package-lock mismatch
-
-Version v13.0.0rc5 (released 2025-07-17)
-
-- migration: optimize script
-- upgrade_scripts: handle thesis custom field migration
-- version: bumped invenio-s3 version to include multipart upload
-- templates: macros: doi: Add copy button for DOIs
-- semantic-ui: components: CopyButton: add size prop
-- semantic-ui: landing_page: ExportButton: Add copy button
-- semantic-ui: componenets: add url fetching in copy button
-- semantic-ui: landing_page: add click event for cite all versions
-
-Version v13.0.0rc4 (released 2025-07-10)
-
-- pid-config: cast to bool RDM_(PARENT)_PERSISTENT_IDENTIFIERS required check
-- fix: default parent_doi_required to False
-- links: update doc links to updated ones
-- i18n: localize DOI labels
-- css: remove .invenio-accordion-field qualifier
-- css: use SemanticUI variables and fix class names
-- ui: ensure accordion caret icons rotate when opened/closed
-- config: add Data Package export format
-
-Version v13.0.0rc3 (released 2025-07-02)
-
-- deposit-ui: uppy uploader ui feature
-- i18n: run js compile_catalog
-- i18n: run js extract msgs
-- i18n: components.js replace Trans with i18next comp
-- i18n: RemoveFromCommunityAction replace Trans with i18next comp
-- i18n: RecordVersionList replace Trans with i18next comp
-- i18n: ImpersonateUserForm replace Trans with i18next comp
-- i18n: CommunityRecordsSearchAppLayout replace Trans with i18next comp
-- chore: replace en dash (–) with ASCII dash (-) in source files
-- i18n: refactor compileCatalog script
-- i18n: Force pull languages
-- i18n: extract py msgs
-
-Version v13.0.0rc2 (released 2025-06-24)
-
-- communities-ui: pass serialized `community_ui` to Jinja templates
-- config: add Celery beat schedule for updating collections size
-- admin: always show users admin panel
-- fix: pass severityChecks to CustomFields
-
-Version v13.0.0rc1 (released 2025-06-13)
-
-- feat(ui): automatic checks for communities (feature flag)
-- feat(ui): FAIR signposting
-- feat(ui): collections
-- feat(ui): records/requests sharing
-- feat(api): multipart file upload over the API
-- feat(admin): jobs to wrap task in the administration interface (feature flag)
-- feat(admin): compare revisions between different records revisions
-- feat(admin): audit logs (feature flag)
-- feat(api): sitemap
-- i18n: option to create translation bundles for python and javascript
-- impr(metadata): thesis handling
-- impr(ui): Mathjax usage
-- impr(ui): visualization of validation errors
-- conf: make it possible to configure DOI as optional
-- remove: invenio-admin dependency
-- maint: upgrade to flask>=3.0
-- maint: upgrade to sqlalchemy>=2.0
-- dev: configurable use of new tools: uv, rspack, pnpm
+- setup: bump invenio-communities and invenio-rdm-records
+- theme: add search overrides for reviewers search results
+- requests: add request action_accept permissions to UI
+- theme: update package-lock.json for compiling catalog for frontend tests
 
 Version v13.0.0b4.dev2 (released 2025-06-13)
 

@@ -1,1 +1,0 @@
-/home/jabbi/PycharmProjects/invenio/notify-demo/assets/js/invenio_app_rdm/overridableRegistry/mapping.js

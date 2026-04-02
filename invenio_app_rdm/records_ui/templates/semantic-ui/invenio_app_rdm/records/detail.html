@@ -4,7 +4,7 @@
   Copyright (C) 2021-2023 TU Wien.
   Copyright (C) 2021 Graz University of Technology.
   Copyright (C) 2021 New York University.
-  Copyright (C) 2024 KTH Royal Institute of Technology.
+  Copyright (C) 2024-2025 KTH Royal Institute of Technology.
 
   Invenio RDM Records is free software; you can redistribute it and/or modify
   it under the terms of the MIT License; see LICENSE file for more details.
@@ -25,6 +25,9 @@
 
 {%- set title = record_ui["metadata"]["title"] %}
 {%- set metadata = record_ui["metadata"] %}
+
+<!-- Shared namespace for files to allow overridability on child blocks while maintaining reference to parent values -->
+{% set files_ns = namespace(preview_file=None, files=[]) %}
 
 {%- set can_curate_record = permissions is defined and (permissions.can_edit or permissions.can_review) %}
 
@@ -48,6 +51,9 @@
 
 
 {%- block page_body %}
+<span id="detail-share-btn-require-link-expiration"
+        data-share-btn-require-link-expiration='{{ config.RDM_RECORDS_REQUIRE_SECRET_LINKS_EXPIRATION | tojson }}'>
+
   <section id="banners" class="banners" aria-label="{{ _('Information banner') }}">
     <!-- COMMUNITY HEADER: hide it when displaying the submission request -->
     {% if not is_preview_submission_request %}
@@ -104,7 +110,7 @@
 
     <!-- PREVIEW HEADER -->
     {% if is_preview %}
-      <div class="ui info flashed bottom attached manage message">
+      <div class="ui info bottom attached manage message">
         <div class="ui container">
           <div class="header">
             <i class="eye icon"></i>
@@ -161,7 +167,7 @@
             >
               <i class="{{ record_ui["ui"]["access_status"]["icon"] }} icon" aria-hidden="true"></i>
               <strong>{{ record_ui["ui"]["access_status"]["title_l10n"] }}</strong>
-              {{ record_ui["ui"]["access_status"]["description_l10n"] }}
+              {{ record_ui["ui"]["access_status"]["description_l10n"] | safe }}
 
               {% if record_ui["access"]["embargo"]["reason"] %}
                 <p>{{ _("Reason") }}: {{ record_ui["access"]["embargo"]["reason"] }}</p>
@@ -203,9 +209,6 @@
                   <div id="recordManagementMobile"
                        role="dialog"
                        class="ui flowing popup transition hidden"
-                       data-record='{{ record_ui | tojson }}'
-                       data-permissions='{{ permissions | tojson }}'
-                       data-is-draft="{{ is_draft | tojson }}"
                        {% if config.RDM_DETAIL_SIDE_BAR_MANAGE_ATTRIBUTES_EXTENSION_TEMPLATE %}
                         {% include config.RDM_DETAIL_SIDE_BAR_MANAGE_ATTRIBUTES_EXTENSION_TEMPLATE %}
                        {% endif %}
@@ -262,13 +265,13 @@
             {# Title #}
             {%- block record_title -%}
               <section id="record-title-section"
-                       aria-label="{{ _('Record title and creators') }}">
+                       aria-label="{{ _('Record title, authors and contributors') }}">
                 <h1 id="record-title"
                     class="wrap-overflowing-text">{{ metadata.title }}</h1>
 
                 {% if record_ui["ui"]["creators"] or record_ui["ui"]["contributors"] %}
                   <section id="creatibutors"
-                           aria-label="{{ _('Creators and contributors') }}">
+                           aria-label="{{ _('Authors and contributors') }}">
                     {%- include "invenio_app_rdm/records/details/creatibutors.html" %}
                   </section>
                 {% endif %}
@@ -288,14 +291,19 @@
                          aria-label="{{ _('Files') }}">
                   {%- if permissions.can_read_files -%}
                     {# record has files AND user can see files #}
-                    {%- set files = files | order_entries | selectattr("status", "==", "completed") | list %}
-                    {%- if files|length > 0 -%}
+                    {# Shared namespace for files (outside blocks) #}
+                    {%- set files_ns.files = files | order_entries | selectattr("status", "==", "completed") | list %}
+                    {%- if files_ns.files|length > 0 -%}
                       <h2 id="files-heading">{{ _('Files') }}</h2>
-                      {%- if files|has_previewable_files -%}
-                        {%-set preview_file = files|select_preview_file(default_preview=record_ui["files"]["default_preview"]) %}
-                        {{ preview_file_box(preview_file, record_ui["id"], is_preview, record, include_deleted) }}
+                      {%- if files_ns.files|has_previewable_files -%}
+                        {%-set files_ns.preview_file = files_ns.files|select_preview_file(default_preview=record_ui["files"]["default_preview"]) %}
+                        {%- block record_file_preview -%}
+                          {{ preview_file_box(files_ns.preview_file, record_ui["id"], is_preview, record, include_deleted) }}
+                        {%- endblock record_file_preview -%}
                       {%- endif -%}
-                      {{ file_list_box(files, record_ui["id"], is_preview, include_deleted, record, permissions) }}
+                      {%- block record_file_list -%}
+                        {{ file_list_box(files_ns.files, record_ui["id"], is_preview, include_deleted, record, permissions) }}
+                      {%- endblock record_file_list -%}
                     {% endif %}
                   {% else %}
                     {# record has files BUT user does not have permission to see files #}
@@ -320,7 +328,7 @@
                              aria-hidden="true"></i>
                           <h4
                             class="inline">{{ record_ui["ui"]["access_status"]["title_l10n"] }}</h4>
-                          <p>{{ record_ui["ui"]["access_status"]["description_l10n"] }}</p>
+                          <p>{{ record_ui["ui"]["access_status"]["description_l10n"] | safe }}</p>
 
                           {% if record_ui["access"]["embargo"]["reason"] %}
                             <p>{{ _("Reason") }}: {{ record_ui["access"]["embargo"]["reason"] }}</p>

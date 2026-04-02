@@ -1,18 +1,18 @@
 // This file is part of InvenioRDM
 // Copyright (C) 2020-2024 CERN.
-// Copyright (C) 2020-2021 Northwestern University.
+// Copyright (C) 2020-2026 Northwestern University.
 // Copyright (C) 2021 Graz University of Technology.
 //
 // Invenio RDM Records is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
 
 import _get from "lodash/get";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Grid, Icon, Message, Placeholder, List, Divider } from "semantic-ui-react";
 import { i18next } from "@translations/invenio_app_rdm/i18next";
 import PropTypes from "prop-types";
-import { ErrorMessage } from "react-invenio-forms";
-import { useSharedVersions } from "./useSharedVersions";
+import { withCancel, http, ErrorMessage } from "react-invenio-forms";
+import Overridable from "react-overridable";
 
 const deserializeRecord = (record) => ({
   id: record.id,
@@ -27,37 +27,45 @@ const deserializeRecord = (record) => ({
 
 const NUMBER_OF_VERSIONS = 5;
 
-const RecordVersionItem = ({ item, activeVersion }) => {
+export const RecordVersionItem = ({ item, activeVersion }) => {
   const doi = _get(item.pids, "doi.identifier", "");
+  const doiLink = _get(item, "links.doi", "");
   return (
-    <List.Item key={item.id} {...(activeVersion && { className: "version active" })}>
-      <List.Content floated="left">
-        {activeVersion ? (
-          <span className="text-break">
-            {i18next.t("Version {{- version}}", { version: item.version })}
-          </span>
-        ) : (
-          <a href={`/records/${item.id}`} className="text-break">
-            {i18next.t("Version {{- version}}", { version: item.version })}
-          </a>
-        )}
+    <Overridable
+      id="InvenioAppRdm.RecordVersionsList.Item.container"
+      item={item}
+      activeVersion={activeVersion}
+      doi={doi}
+    >
+      <List.Item key={item.id} {...(activeVersion && { className: "version active" })}>
+        <List.Content floated="left">
+          {activeVersion ? (
+            <span className="text-break">
+              {i18next.t("Version {{- version}}", { version: item.version })}
+            </span>
+          ) : (
+            <a href={`/records/${item.id}`} className="text-break">
+              {i18next.t("Version {{- version}}", { version: item.version })}
+            </a>
+          )}
 
-        {doi && (
-          <a
-            href={`https://doi.org/${doi}`}
-            className={"doi" + (activeVersion ? " text-muted-darken" : " text-muted")}
-          >
-            {doi}
-          </a>
-        )}
-      </List.Content>
+          {doi && (
+            <a
+              href={doiLink}
+              className={"doi" + (activeVersion ? " text-muted-darken" : " text-muted")}
+            >
+              {doi}
+            </a>
+          )}
+        </List.Content>
 
-      <List.Content floated="right">
-        <small className={activeVersion ? "text-muted-darken" : "text-muted"}>
-          {item.publication_date}
-        </small>
-      </List.Content>
-    </List.Item>
+        <List.Content floated="right">
+          <small className={activeVersion ? "text-muted-darken" : "text-muted"}>
+            {item.publication_date}
+          </small>
+        </List.Content>
+      </List.Item>
+    </Overridable>
   );
 };
 
@@ -78,19 +86,52 @@ const PreviewMessage = () => {
   );
 };
 
-const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoading, versionsError }) => {
+export const RecordVersionsList = ({ record, isPreview }) => {
   const recordDeserialized = deserializeRecord(record);
   const recordParentDOI = recordDeserialized?.parent?.pids?.doi?.identifier;
   const recordDraftParentDOIFormat = recordDeserialized?.new_draft_parent_doi;
   const recid = recordDeserialized.id;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentRecordInResults, setCurrentRecordInResults] = useState(false);
+  const [recordVersions, setRecordVersions] = useState({});
 
-  // Check if current record is in results when versions load
-  React.useEffect(() => {
-    if (!versionsLoading && allVersions.hits) {
-      setCurrentRecordInResults(allVersions.hits.some((record) => record.id === recid));
+  useEffect(() => {
+    const fetchVersions = async () => {
+      return await http.get(
+        `${recordDeserialized.links.versions}?size=${NUMBER_OF_VERSIONS}&sort=version&allversions=true`,
+        {
+          headers: {
+            Accept: "application/vnd.inveniordm.v1+json",
+          },
+          withCredentials: true,
+        }
+      );
+    };
+
+    const cancellableFetchVersions = withCancel(fetchVersions());
+
+    async function fetchVersionsAndSetState() {
+      try {
+        const result = await cancellableFetchVersions.promise;
+        let { hits, total } = result.data.hits;
+        hits = hits.map(deserializeRecord);
+        setCurrentRecordInResults(hits.some((record) => record.id === recid));
+        setRecordVersions({ hits, total });
+        setLoading(false);
+      } catch (error) {
+        if (error !== "UNMOUNTED") {
+          setError(i18next.t("An error occurred while fetching the versions."));
+          setLoading(false);
+        }
+      }
     }
-  }, [allVersions, versionsLoading, recid]);
+    fetchVersionsAndSetState();
+
+    return () => {
+      cancellableFetchVersions?.cancel();
+    };
+  }, [recordDeserialized.links.versions, recid]);
 
   const loadingcmp = () => {
     return isPreview ? (
@@ -110,13 +151,13 @@ const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoa
   };
 
   const errorMessagecmp = () => (
-    <ErrorMessage className="rel-mr-1 rel-ml-1" content={i18next.t(versionsError)} negative />
+    <ErrorMessage className="rel-mr-1 rel-ml-1" content={i18next.t(error)} negative />
   );
 
   const recordVersionscmp = () => (
     <List divided>
       {isPreview ? <PreviewMessage /> : null}
-      {allVersions.hits.slice(0, NUMBER_OF_VERSIONS).map((item) => (
+      {recordVersions.hits.map((item) => (
         <RecordVersionItem
           key={item.id}
           item={item}
@@ -129,7 +170,7 @@ const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoa
           <RecordVersionItem item={recordDeserialized} activeVersion />
         </>
       )}
-      {allVersions.total > 1 && (
+      {recordVersions.total > 1 && (
         <Grid className="mt-0">
           <Grid.Row centered>
             <a
@@ -137,7 +178,7 @@ const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoa
               className="font-small"
             >
               {i18next.t(`View all {{count}} versions`, {
-                count: allVersions.total,
+                count: recordVersions.total,
               })}
             </a>
           </Grid.Row>
@@ -174,29 +215,7 @@ const RecordVersionsListContent = ({ record, isPreview, allVersions, versionsLoa
     </List>
   );
 
-  return versionsLoading ? loadingcmp() : versionsError ? errorMessagecmp() : recordVersionscmp();
-};
-
-RecordVersionsListContent.propTypes = {
-  record: PropTypes.object.isRequired,
-  isPreview: PropTypes.bool.isRequired,
-  allVersions: PropTypes.object.isRequired,
-  versionsLoading: PropTypes.bool.isRequired,
-  versionsError: PropTypes.string,
-};
-
-export const RecordVersionsList = ({ record, isPreview }) => {
-  const { allVersions, versionsLoading, versionsError } = useSharedVersions(record);
-
-  return (
-    <RecordVersionsListContent
-      record={record}
-      isPreview={isPreview}
-      allVersions={allVersions}
-      versionsLoading={versionsLoading}
-      versionsError={versionsError}
-    />
-  );
+  return loading ? loadingcmp() : error ? errorMessagecmp() : recordVersionscmp();
 };
 
 RecordVersionsList.propTypes = {

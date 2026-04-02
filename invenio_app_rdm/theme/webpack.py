@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019-2024 CERN.
+# Copyright (C) 2019-2025 CERN.
 # Copyright (C) 2019-2022 Northwestern University.
 # Copyright (C)      2022 TU Wien.
 # Copyright (C)      2022 Graz University of Technology.
@@ -34,6 +34,7 @@ theme = WebpackThemeBundle(
                 "invenio-app-rdm-frontpage": "./js/invenio_app_rdm/frontpage/index.js",
                 "overridable-registry": "./js/invenio_app_rdm/overridableRegistry/index.js",
                 "invenio-users-moderation-administration": "./js/invenio_app_rdm/administration/userModeration/index.js",
+                "invenio-requests-administration": "./js/invenio_app_rdm/administration/requests/index.js",
                 "invenio-users-administration": "./js/invenio_app_rdm/administration/users/index.js",
                 "invenio-records-administration": "./js/invenio_app_rdm/administration/records/index.js",
                 "invenio-drafts-administration": "./js/invenio_app_rdm/administration/drafts/index.js",

@@ -82,11 +82,7 @@ def pass_draft(expand=False):
                     expand=expand,
                 )
                 kwargs["draft"] = draft
-                kwargs["files_locked"] = (
-                    record_service.config.lock_edit_published_files(
-                        record_service, g.identity, draft=draft, record=draft._record
-                    )
-                )
+                kwargs["files_locked"] = draft._record.files.bucket.locked
                 return f(**kwargs)
             except PIDDoesNotExistError:
                 # Redirect to /records/:id because users are interchangeably
@@ -111,6 +107,30 @@ def pass_is_preview(f):
     @wraps(f)
     def view(**kwargs):
         kwargs["is_preview"] = request.args.get("preview") == "1"
+        return f(**kwargs)
+
+    return view
+
+
+def pass_is_iframe(f):
+    """Decorate a view to check if it's being requested from inside an iframe."""
+
+    @wraps(f)
+    def view(**kwargs):
+        # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest
+        header_value = request.headers.get("Sec-Fetch-Dest")
+        kwargs["is_iframe"] = header_value == "iframe"
+        return f(**kwargs)
+
+    return view
+
+
+def pass_preview_file(f):
+    """Decorate a view to pass the preview file."""
+
+    @wraps(f)
+    def view(**kwargs):
+        kwargs["preview_file"] = request.args.get("preview_file")
         return f(**kwargs)
 
     return view
@@ -160,6 +180,7 @@ def pass_record_or_draft(expand=False):
         def view(**kwargs):
             pid_value = kwargs.get("pid_value")
             is_preview = kwargs.get("is_preview")
+            preview_file = kwargs.get("preview_file")
             include_deleted = kwargs.get("include_deleted", False)
             read_kwargs = {
                 "id_": pid_value,
@@ -168,23 +189,8 @@ def pass_record_or_draft(expand=False):
             }
 
             if is_preview:
-                try:
-                    record = service().read_draft(**read_kwargs)
-                except NoResultFound:
-                    try:
-                        record = service().read(
-                            include_deleted=include_deleted, **read_kwargs
-                        )
-                    except NoResultFound:
-                        # If the parent pid is being used we can get the id of the latest record and redirect
-                        latest_version = service().read_latest(**read_kwargs)
-                        return redirect(
-                            url_for(
-                                "invenio_app_rdm_records.record_detail",
-                                pid_value=latest_version.id,
-                                preview=1,
-                            )
-                        )
+                # read_draft internally handles NoResultFound and renders an error page
+                record = service().read_draft(**read_kwargs)
             else:
                 try:
                     record = service().read(
@@ -197,6 +203,7 @@ def pass_record_or_draft(expand=False):
                         url_for(
                             "invenio_app_rdm_records.record_detail",
                             pid_value=latest_version.id,
+                            preview_file=preview_file,
                         )
                     )
             kwargs["record"] = record

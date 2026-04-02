@@ -1,5 +1,5 @@
 // This file is part of InvenioRDM
-// Copyright (C) 2023-2024 CERN.
+// Copyright (C) 2023-2025 CERN.
 //
 // Invenio RDM Records is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
@@ -10,8 +10,15 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import PropTypes from "prop-types";
 import { http } from "react-invenio-forms";
 import { APIRoutes } from "../administration/users/api/routes";
+import { RecordDeletion } from "../components/RecordDeletion";
 
-export const ManageButton = ({ recid, recordOwnerID }) => {
+export const ManageButton = ({
+  record,
+  recordOwnerID,
+  permissions,
+  recordDeletion,
+  recordDeletionOptions,
+}) => {
   return (
     <Dropdown
       fluid
@@ -23,30 +30,56 @@ export const ManageButton = ({ recid, recordOwnerID }) => {
       className="icon text-align-center"
     >
       <Dropdown.Menu>
-        <Dropdown.Item
-          as="a"
-          href={`/administration/records?q=id:${recid}`}
-          target="_blank"
-          key="manage_record"
-          text={i18next.t("Manage record")}
-        />
-        <Dropdown.Item
-          as="a"
-          href={`/administration/users?q=id:${recordOwnerID}`}
-          target="_blank"
-          key="manage_user"
-          text={i18next.t("Manage user")}
-        />
-        <Dropdown.Divider />
-        {recordOwnerID && <BlockUserItem recordOwnerID={recordOwnerID} />}
+        {recordDeletion["valid_user"] && (
+          <>
+            <Dropdown.Item>
+              <RecordDeletion
+                record={record}
+                permissions={permissions}
+                recordDeletion={recordDeletion}
+                options={recordDeletionOptions}
+                disabled={!recordDeletion["allowed"]}
+              />
+            </Dropdown.Item>
+
+            {permissions.can_moderate && <Dropdown.Divider />}
+          </>
+        )}
+        {permissions.can_moderate && (
+          <>
+            <Dropdown.Item
+              as="a"
+              href={`/administration/records?q=id:${record["id"]}&f=allversions:true`}
+              target="_blank"
+              key="manage_record"
+              text={i18next.t("Manage record")}
+            />
+            <Dropdown.Item
+              as="a"
+              href={`/administration/users?q=id:${recordOwnerID}`}
+              target="_blank"
+              key="manage_user"
+              text={i18next.t("Manage user")}
+            />
+            <Dropdown.Divider />
+            {recordOwnerID && <BlockUserItem recordOwnerID={recordOwnerID} />}
+          </>
+        )}
       </Dropdown.Menu>
     </Dropdown>
   );
 };
 
 ManageButton.propTypes = {
-  recid: PropTypes.string.isRequired,
+  record: PropTypes.object.isRequired,
   recordOwnerID: PropTypes.string.isRequired,
+  permissions: PropTypes.object.isRequired,
+  recordDeletion: PropTypes.object,
+  recordDeletionOptions: PropTypes.array.isRequired,
+};
+
+ManageButton.defaultProps = {
+  recordDeletion: {},
 };
 
 const BlockUserItem = ({ recordOwnerID }) => {

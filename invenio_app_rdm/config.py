@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019-2025 CERN.
+# Copyright (C) 2019-2026 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021-2025 Graz University of Technology.
-# Copyright (C) 2022-2024 KTH Royal Institute of Technology.
+# Copyright (C) 2022-2025 KTH Royal Institute of Technology.
 # Copyright (C) 2023      TU Wien
 #
 # Invenio App RDM is free software; you can redistribute it and/or modify it
@@ -61,6 +61,8 @@ from invenio_rdm_records.notifications.builders import (
     GuestAccessRequestSubmitNotificationBuilder,
     GuestAccessRequestSubmittedNotificationBuilder,
     GuestAccessRequestTokenCreateNotificationBuilder,
+    RecordDeletionAcceptNotificationBuilder,
+    RecordDeletionDeclineNotificationBuilder,
     UserAccessRequestAcceptNotificationBuilder,
     UserAccessRequestCancelNotificationBuilder,
     UserAccessRequestDeclineNotificationBuilder,
@@ -79,15 +81,16 @@ from invenio_rdm_records.services.errors import (
     InvalidAccessRestrictions,
     InvalidCommunityVisibility,
 )
-from invenio_rdm_records.services.github.release import RDMGithubRelease
 from invenio_rdm_records.services.permissions import RDMRequestsPermissionPolicy
 from invenio_rdm_records.services.stats import permissions_policy_lookup_factory
 from invenio_rdm_records.services.tasks import StatsRDMReindexTask
 from invenio_records_resources.references.entity_resolvers import ServiceResultResolver
 from invenio_requests.notifications.builders import (
     CommentRequestEventCreateNotificationBuilder,
+    CommentRequestEventReplyNotificationBuilder,
 )
 from invenio_requests.resources.requests.config import request_error_handlers
+from invenio_requests.services.requests import facets
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_file_unique_id
 from invenio_stats.processors import (
@@ -525,6 +528,10 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     "pool_recycle": 3600,
     # set a more agressive timeout to ensure http requests don't wait for long
     "pool_timeout": 10,
+    # Ensure the database is using the UTC timezone for interpreting timestamps (Postgres only).
+    # This overrides any default setting (e.g. in postgresql.conf). Invenio expects the DB to receive
+    # and provide UTC timestamps in all cases, so it's important that this doesn't get changed.
+    "connect_args": {"options": "-c timezone=UTC"},
 }
 """SQLAlchemy engine options.
 
@@ -649,7 +656,7 @@ OAISERVER_METADATA_FORMATS = {
     },
     "datacite": {
         "serializer": "invenio_rdm_records.oai:datacite_etree",
-        "schema": "http://schema.datacite.org/meta/kernel-4.3/metadata.xsd",
+        "schema": "http://schema.datacite.org/meta/kernel-4.5/metadata.xsd",
         "namespace": "http://datacite.org/schema/kernel-4",
     },
     "oai_datacite": {
@@ -659,7 +666,7 @@ OAISERVER_METADATA_FORMATS = {
     },
     "datacite4": {
         "serializer": "invenio_rdm_records.oai:datacite_etree",
-        "schema": "http://schema.datacite.org/meta/kernel-4.3/metadata.xsd",
+        "schema": "http://schema.datacite.org/meta/kernel-4.5/metadata.xsd",
         "namespace": "http://datacite.org/schema/kernel-4",
     },
     "oai_datacite4": {
@@ -722,13 +729,6 @@ ACCESS_CACHE = "invenio_cache:current_cache"
 
 SEARCH_HOSTS = [{"host": "localhost", "port": 9200}]
 """Search hosts."""
-
-# Invenio-Base
-# ============
-# See https://invenio-base.readthedocs.io/en/latest/api.html#invenio_base.wsgi.wsgi_proxyfix  # noqa
-
-WSGI_PROXIES = 2
-"""Correct number of proxies in front of your application."""
 
 # Invenio-REST
 # ============
@@ -838,7 +838,7 @@ APP_RDM_RECORD_EXPORTERS = {
     "datacite-json": {
         "name": _("DataCite JSON"),
         "serializer": (
-            "invenio_rdm_records.resources.serializers:DataCite43JSONSerializer"
+            "invenio_rdm_records.resources.serializers:DataCite45JSONSerializer"
         ),
         "params": {"options": {"indent": 2, "sort_keys": True}},
         "content-type": "application/vnd.datacite.datacite+json",
@@ -847,7 +847,7 @@ APP_RDM_RECORD_EXPORTERS = {
     "datacite-xml": {
         "name": _("DataCite XML"),
         "serializer": (
-            "invenio_rdm_records.resources.serializers:DataCite43XMLSerializer"
+            "invenio_rdm_records.resources.serializers:DataCite45XMLSerializer"
         ),
         "params": {},
         "content-type": "application/vnd.datacite.datacite+xml",
@@ -1074,9 +1074,9 @@ COMMUNITIES_SHOW_BROWSE_MENU_ENTRY = False
 # ===================
 
 RDM_REQUESTS_ROUTES = {
-    "user-dashboard-request-details": "/me/requests/<request_pid_value>",
-    "community-dashboard-request-details": "/communities/<pid_value>/requests/<request_pid_value>",
-    "community-dashboard-invitation-details": "/communities/<pid_value>/invitations/<request_pid_value>",
+    "user-dashboard-request-details": "/me/requests/<uuid:request_pid_value>",
+    "community-dashboard-request-details": "/communities/<pid_value>/requests/<uuid:request_pid_value>",
+    "community-dashboard-invitation-details": "/communities/<pid_value>/invitations/<uuid:request_pid_value>",
 }
 
 RDM_COMMUNITIES_ROUTES = {
@@ -1095,7 +1095,7 @@ RDM_SEARCH_USER_COMMUNITIES = {
 
 RDM_SEARCH_USER_REQUESTS = {
     "facets": ["type", "status"],
-    "sort": ["bestmatch", "newest", "oldest"],
+    "sort": ["bestmatch", "newest", "oldest", "newestactivity", "oldestactivity"],
 }
 """User requests search configuration (i.e list of user requests)"""
 
@@ -1171,6 +1171,9 @@ PREVIEWER_PREFERENCE = [
     "txt",
 ]
 """Preferred previewers."""
+
+PREVIEWER_ABSTRACT_TEMPLATE = "invenio_previewer/rdm_abstract_previewer.html"
+"""Override the abstract template with an RDM-specific one."""
 
 RECORDS_RESOURCES_IMAGE_FORMATS = ["." + ext for ext in IIIF_FORMATS.keys()]
 """RECORDS_RESOURCES_IMAGE_FORMATS must contain all possible IIIF formats to ensure their metadata is extracted."""
@@ -1404,6 +1407,7 @@ NOTIFICATIONS_BUILDERS = {
     GrantUserAccessNotificationBuilder.type: GrantUserAccessNotificationBuilder,
     # Comment request event
     CommentRequestEventCreateNotificationBuilder.type: CommentRequestEventCreateNotificationBuilder,
+    CommentRequestEventReplyNotificationBuilder.type: CommentRequestEventReplyNotificationBuilder,
     community_notifications.SubComReqCommentNotificationBuilder.type: community_notifications.SubComReqCommentNotificationBuilder,
     community_notifications.SubComInvCommentNotificationBuilder.type: community_notifications.SubComInvCommentNotificationBuilder,
     # Community inclusion
@@ -1427,6 +1431,9 @@ NOTIFICATIONS_BUILDERS = {
     community_notifications.SubComInvitationAccept.type: community_notifications.SubComInvitationAccept,
     community_notifications.SubComInvitationDecline.type: community_notifications.SubComInvitationDecline,
     community_notifications.SubComInvitationExpire.type: community_notifications.SubComInvitationExpire,
+    # Record deletion
+    RecordDeletionAcceptNotificationBuilder.type: RecordDeletionAcceptNotificationBuilder,
+    RecordDeletionDeclineNotificationBuilder.type: RecordDeletionDeclineNotificationBuilder,
     # Notify
     notify_notifications.NewEndorsementNotificationBuilder.type: notify_notifications.NewEndorsementNotificationBuilder,
     notify_notifications.EndorsementUpdateNotificationBuilder.type: notify_notifications.EndorsementUpdateNotificationBuilder,
@@ -1478,13 +1485,6 @@ REQUESTS_ERROR_HANDLERS = {
 }
 
 
-# Invenio-Github
-# =================
-#
-GITHUB_RELEASE_CLASS = RDMGithubRelease
-"""Default RDM release class."""
-
-
 # Flask-Menu
 # ==========
 #
@@ -1517,3 +1517,56 @@ SITEMAP_SECTIONS = [
     SitemapSectionOfRDMRecords(),
     SitemapSectionOfCommunities(),
 ]
+
+
+# Moderation requests search configuration
+# ========================================
+APP_RDM_MODERATION_REQUEST_SEARCH = {
+    "facets": ["status", "is_open"],
+    "sort": ["bestmatch", "newest", "oldest", "newestactivity", "oldestactivity"],
+}
+"""Moderation requests search configuration."""
+
+APP_RDM_MODERATION_REQUEST_SORT_OPTIONS = {
+    "bestmatch": dict(
+        title=_("Best match"),
+        fields=["_score"],
+    ),
+    "newest": dict(
+        title=_("Newest"),
+        fields=["-created"],
+    ),
+    "oldest": dict(
+        title=_("Oldest"),
+        fields=["created"],
+    ),
+    "newestactivity": dict(
+        title=_("Newest activity"),
+        fields=["-last_activity_at"],
+    ),
+    "oldestactivity": dict(
+        title=_("Oldest activity"),
+        fields=["last_activity_at"],
+    ),
+}
+"""Definitions of available record sort options."""
+
+
+APP_RDM_MODERATION_REQUEST_FACETS = {
+    "status": {
+        "facet": facets.status,
+        "ui": {
+            "field": "status",
+        },
+    },
+    "is_open": {"facet": facets.is_open, "ui": {"field": "is_open"}},
+}
+"""Available facets defined for this module."""
+
+# Invenio-VCS
+# ===========
+VCS_TEMPLATE_INDEX = "invenio_vcs/rdm-index.html"
+VCS_TEMPLATE_INDEX_ITEM = "invenio_vcs/rdm-index-item.html"
+VCS_TEMPLATE_VIEW = "invenio_vcs/rdm-view.html"
+VCS_TEMPLATE_REPO_SWITCH = "invenio_vcs/rdm-repo-switch.html"
+VCS_TEMPLATE_RELEASE_ITEM = "invenio_vcs/rdm-release-item.html"

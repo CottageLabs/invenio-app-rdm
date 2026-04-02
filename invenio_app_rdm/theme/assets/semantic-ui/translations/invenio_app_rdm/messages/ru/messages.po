@@ -1,12 +1,12 @@
 # 
 # Translators:
-# Tibor Simko <tibor.simko@cern.ch>, 2025
+# Tibor Simko <tibor.simko@cern.ch>, 2024
 # Anna Sakoyan, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: i18next-conv\n"
-"POT-Creation-Date: 2025-07-22T14:13:07.642Z\n"
+"POT-Creation-Date: 2025-03-27T16:30:16.192Z\n"
 "PO-Revision-Date: 2021-07-14 16:07+0000\n"
 "Last-Translator: Anna Sakoyan, 2025\n"
 "Language-Team: Russian (https://app.transifex.com/inveniosoftware/teams/23537/ru/)\n"
@@ -16,35 +16,8 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 "mime-version: 1.0\n"
 
-msgid "Recent changes"
-msgstr ""
-
-msgid "Audit Log Details"
-msgstr ""
-
-msgid "Resource"
-msgstr ""
-
-msgid "Resource ID"
-msgstr ""
-
-msgid "Action"
-msgstr "Действие"
-
-msgid "User"
-msgstr "Пользователь"
-
-msgid "Created"
-msgstr "Создано"
-
-msgid "No revision ID found."
-msgstr ""
-
-msgid "Unable to fetch revisions."
-msgstr ""
-
-msgid "Cancel revision comparison"
-msgstr ""
+msgid "Basic information"
+msgstr "Основная информация"
 
 msgid "Impersonate user"
 msgstr "Имперсонировать пользователя"
@@ -74,17 +47,14 @@ msgstr ""
 "Пожалуйста, прочтите внимательно и подтвердите следующие положения, прежде "
 "чем продолжать."
 
-msgid "You are about to impersonate user "
+msgid "You are about to impersonate user <bold>{{email}}(id: {{id}})</bold>."
 msgstr ""
+"Вы собираетесь имперсонировать пользователя <bold>{{email}}(id: "
+"{{id}})</bold>."
 
-msgid "You "
+msgid "You <bold>MUST</bold> logout after completing your inquiry."
 msgstr ""
-
-msgid "MUST"
-msgstr ""
-
-msgid " logout after completing your inquiry."
-msgstr ""
+"Вы <bold>ДОЛЖНЫ</bold> выйти, после того как выясните то, что вам нужно."
 
 msgid "Close"
 msgstr "Закрыть"
@@ -100,8 +70,10 @@ msgstr "Примечание"
 
 msgid ""
 "This is the default quota that will be applied to any NEW records created by"
-" this user - it will NOT update quota of existing records."
+" this user – it will NOT update quota of existing records."
 msgstr ""
+"Это квота по умолчанию, она будет применяться к любым НОВЫМ записям, "
+"созданным этим пользователем, но она НЕ изменит квоту существующих записей."
 
 msgid "Quota of {{id}} was set to {{quota}} {{unit}}"
 msgstr "Квота для {{id}} была установлена на {{quota}} {{unit}}"
@@ -181,9 +153,6 @@ msgstr "Ссылки"
 msgid "Set quota for record {{recordId}}"
 msgstr "Установить квоту для записи {{recordId}}"
 
-msgid "Compare revisions"
-msgstr ""
-
 msgid "Delete record"
 msgstr "Удалить запись"
 
@@ -220,8 +189,8 @@ msgstr "версия"
 msgid "Owner"
 msgstr "Владелец"
 
-msgid "System"
-msgstr "Система"
+msgid "Created"
+msgstr "Создано"
 
 msgid "Files"
 msgstr "Файлы"
@@ -280,6 +249,9 @@ msgstr "Пользователь {{name}} заблокирован."
 msgid "Error"
 msgstr "Ошибка"
 
+msgid "User"
+msgstr "Пользователь"
+
 msgid "Email"
 msgstr "Электронная почта"
 
@@ -300,12 +272,6 @@ msgstr "GitHub"
 
 msgid "Updated"
 msgstr "Обновлено"
-
-msgid "Drafts"
-msgstr ""
-
-msgid "Moderation"
-msgstr ""
 
 msgid "Restore"
 msgstr "Восстановить"
@@ -343,11 +309,15 @@ msgstr "Фильтрация результатов"
 msgid "Search records in community..."
 msgstr "Поиск по записям в сообществе..."
 
-msgid "results found"
-msgstr ""
-
 msgid "Sort by"
 msgstr "Сортировка"
+
+msgid " results found"
+msgid_plural " results found"
+msgstr[0] "результат найден"
+msgstr[1] "результата найдено"
+msgstr[2] "результатов найдено"
+msgstr[3] "результатов найдено"
 
 msgid "Search records..."
 msgstr "Искать записи..."
@@ -388,26 +358,21 @@ msgstr "Нет названия"
 msgid "Uploaded on {{uploadDate}}"
 msgstr "Загружено {{uploadDate}}"
 
-msgid "Published in: {{- publishInfo }}"
-msgstr ""
+msgid "Published in: {{publishInfo}}"
+msgstr "Опубликовано в: {{publishInfo}}"
 
-msgid "Recommendation"
-msgstr ""
-
-msgid "This check is recommended but not mandatory."
-msgstr ""
-
-msgid "This check indicates a critical issue that must be addressed."
-msgstr ""
+msgid "{{count}} more versions exist for this record"
+msgid_plural "{{count}} more versions exist for this record"
+msgstr[0] "для этой записи есть еще {{count}} версия"
+msgstr[1] "для этой записи есть еще {{count}} версии"
+msgstr[2] "для этой записи есть еще {{count}} версий"
+msgstr[3] "для этой записи есть еще {{count}} версий"
 
 msgid "Person"
 msgstr ""
 
 msgid "The record has no files."
 msgstr "У этой записи нет файлов."
-
-msgid "Basic information"
-msgstr "Основная информация"
 
 msgid "Creators"
 msgstr "Создатели"
@@ -491,6 +456,13 @@ msgstr "При выдаче сообществ возникла ошибка"
 msgid "Communities"
 msgstr "Сообщества"
 
+msgid "View all {{count}} communities"
+msgid_plural "View all {{count}} communities"
+msgstr[0] "Смотреть {{count}} сообщество"
+msgstr[1] "Смотреть {{count}} сообщества"
+msgstr[2] "Смотреть {{count}} сообществ"
+msgstr[3] "Смотреть {{count}} сообществ"
+
 msgid "Submit to community"
 msgstr "Отправить в сообщество"
 
@@ -523,15 +495,6 @@ msgstr "Управление записью"
 
 msgid "Manage user"
 msgstr "Управление пользователем"
-
-msgid "Block user"
-msgstr ""
-
-msgid "Block User"
-msgstr ""
-
-msgid "Blocking the user will delete all existing records of the user."
-msgstr ""
 
 msgid "Remove branding"
 msgstr "Убрать маркировку"
@@ -572,9 +535,6 @@ msgstr "Стиль"
 msgid "This record is not included in any communities yet."
 msgstr "Эта запись еще не включена ни в какие сообщества."
 
-msgid "Part of"
-msgstr ""
-
 msgid "Search for community..."
 msgstr "Искать сообщество..."
 
@@ -605,21 +565,30 @@ msgstr "Отображаются только опубликованные ве�
 msgid "An error occurred while fetching the versions."
 msgstr "При выводе версий произошла ошибка."
 
-msgid "Cite all versions?"
-msgstr ""
-
-msgid "You can cite all versions by using the DOI"
-msgstr ""
+msgid "View all {{count}} versions"
+msgid_plural "View all {{count}} versions"
+msgstr[0] "Просмотреть {{count}} версию"
+msgstr[1] "Просмотреть все {{count}} версии"
+msgstr[2] "Просмотреть все {{count}} версий"
+msgstr[3] "Просмотреть все {{count}} версий"
 
 msgid ""
-"This DOI represents all versions, and will always resolve to the latest one."
+"<0><0>Cite all versions?</0> You can cite all versions by using the DOI "
+"<3></3>. This DOI represents all versions, and will always resolve to the "
+"latest one. <5>Read more</5>.</0>"
 msgstr ""
+"<0><0>Цитировать все версии?</0> Вы можете сослаться на все версии с помощью"
+" DOI <3></3>. Это DOI представляет все версии и всегда будет выводить на "
+"последнюю. <5>Подробнее</5>.</0>"
 
-msgid "Read more"
+msgid ""
+"<0><0>Cite all versions?</0> You can cite all versions by using the DOI . "
+"The DOI is registered when the first version is published. <4>Read "
+"more</4>.</0>"
 msgstr ""
-
-msgid "The DOI is registered when the first version is published."
-msgstr ""
+"<0><0>Цитировать все версии?</0> Вы можете сослаться на все версии с помощью"
+" DOI. Это DOI регистрируется, когда первая версия опубликована. "
+"<4>Подробнее</4>.</0>"
 
 msgid "Remove"
 msgstr "Убрать"
@@ -635,18 +604,6 @@ msgstr "Вы уверены, что хотите убрать запись из 
 
 msgid "I understand the consequences:"
 msgstr "Я понимаю последствия:"
-
-msgid "Members of the community "
-msgstr ""
-
-msgid " will "
-msgstr ""
-
-msgid "lose their access"
-msgstr ""
-
-msgid " to the record."
-msgstr ""
 
 msgid ""
 "The record can only be re-included in the community by going through a new "
@@ -666,6 +623,13 @@ msgstr "Отменить"
 
 msgid "Confirm removal"
 msgstr "Подтвердить удаление"
+
+msgid ""
+"Members of the community <1>\"<1>{{communityTitle}}</1>\"</1> will <4>lose "
+"their access</4> to the record."
+msgstr ""
+"Участники сообщества <1>\"<1>{{communityTitle}}</1>\"</1> <4>потеряют "
+"доступ</4> к этой записи."
 
 msgid "Select permissions"
 msgstr "Выберите права"
@@ -711,18 +675,15 @@ msgstr ""
 msgid "Can preview drafts"
 msgstr "Может предварительно просматривать черновики"
 
-msgid ""
-"Can view drafts, restricted files, and comment on associated draft requests "
-"of all versions of this record."
-msgstr ""
+msgid "Can view drafts and restricted files of all versions of this record."
+msgstr "Может просматривать черновики и файлы во всех версиях этой записи."
 
 msgid "Can edit"
 msgstr "Может редактировать"
 
 msgid ""
-"Can edit drafts, view restricted files, and comment on associated draft "
-"requests of all versions of this record."
-msgstr ""
+"Can edit drafts and view restricted files of all versions of this record."
+msgstr "Может редактировать черновики и файлы во всех версиях этой записи."
 
 msgid ""
 "Can view (view access link can be created only after the record is "
@@ -827,9 +788,11 @@ msgid "Can manage"
 msgstr "Может управлять"
 
 msgid ""
-"Can manage access, edit drafts, view restricted files, and comment on "
-"associated draft requests of all versions of this record."
+"Can manage access, edit drafts and view restricted files of all versions of "
+"this record."
 msgstr ""
+"Может управлять доступом, редактировать черновики и просматривать файлы, "
+"находящиеся в ограниченном доступе, во всех версиях этой записи."
 
 msgid "You don't have permissions to share this record."
 msgstr "У вас нет прав делиться этой записью."
@@ -898,41 +861,24 @@ msgstr "Начать заново"
 msgid "ProTip"
 msgstr "Полезный совет"
 
-msgid "will give you all the publications from 2025 until today."
-msgstr ""
-
-msgid "For more tips, check out our "
-msgstr ""
-
 msgid "Search guide"
 msgstr "Руководство по поиску"
 
-msgid "search guide"
+msgid ""
+"<0>For more tips, check out our <2>search guide</2> for defining advanced "
+"search queries.</0>"
 msgstr ""
-
-msgid "for defining advanced search queries."
-msgstr ""
-
-msgid "This community has no subcommunities"
-msgstr ""
-
-msgid "Logging in..."
-msgstr ""
-
-msgid "Logging out..."
-msgstr ""
+"<0>За дополнительной информацией обратитесь к нашему <2>руководству по "
+"поиску </2> для справки по продвинутым поисковым запросам.</0>"
 
 msgid "Search in my communities..."
 msgstr "Искать в моих сообществах..."
 
-msgid "My communities"
-msgstr "Мои сообщества"
-
 msgid "View"
 msgstr "Просмотр"
 
-msgid "Published in: {{- publishedIn }}"
-msgstr ""
+msgid "Published in: {{publishedIn}}"
+msgstr "Опубликовано в: {{publishedIn}}"
 
 msgid "In review"
 msgstr "На согласовании"
@@ -970,9 +916,6 @@ msgstr "Новая загрузка"
 msgid "Search in my uploads..."
 msgstr "Искать в моих загрузках"
 
-msgid "My uploads"
-msgstr ""
-
 msgid "ORCID profile"
 msgstr "Профиль ORCID"
 
@@ -992,4 +935,24 @@ msgid "GND logo"
 msgstr ""
 
 msgid "No name"
+msgstr ""
+
+msgid "and {{count}} other"
+msgid_plural "and {{count}} other"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+
+msgid "and {{count}} others"
+msgid_plural "and {{count}} others"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+msgstr[3] ""
+
+msgctxt ""
+"date:[2017-01-01 TO *]</0> will give you all the publications from 2017 "
+"until today.</0>"
+msgid "<0><0>metadata.publication"
 msgstr ""

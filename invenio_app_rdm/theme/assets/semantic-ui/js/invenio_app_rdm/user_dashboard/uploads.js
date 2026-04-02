@@ -29,6 +29,7 @@ import {
   ContribSearchAppFacets,
   ContribBucketAggregationElement,
   ContribBucketAggregationValuesElement,
+  ContribRangeFacetElement,
 } from "@js/invenio_search_ui/components";
 
 const statuses = {
@@ -60,7 +61,7 @@ export const RDMRecordResultsListItem = ({ result }) => {
       i18next.t("No description")
     ),
     title: _get(result, "metadata.title", i18next.t("No title")),
-    creators: _get(result, "ui.creators.creators", []).slice(0, 3),
+    creators: _get(result, "ui.creators.creators", []),
     subjects: _get(result, "ui.subjects", []),
     publicationDate: _get(
       result,
@@ -190,6 +191,7 @@ const DashboardResultViewWAppName = parametrize(DashboardResultView, {
 export const defaultComponents = {
   [`${appName}.BucketAggregation.element`]: ContribBucketAggregationElement,
   [`${appName}.BucketAggregationValues.element`]: ContribBucketAggregationValuesElement,
+  [`${appName}.RangeFacet.element`]: ContribRangeFacetElement,
   [`${appName}.Count.element`]: RDMCountComponent,
   [`${appName}.EmptyResults.element`]: RDMEmptyResults,
   [`${appName}.ResultsList.item`]: RDMRecordResultsListItem,
